@@ -1,0 +1,94 @@
+---
+title: "RNA-Seq Normalization"
+format: html
+---
+
+```{r}
+
+#| output: FALSE
+
+library(dplyr)
+library(edgeR)
+library(limma)
+
+```
+
+# Make counts matrix
+```{r}
+
+#counts
+counts = tcga_data@assays@data$unstranded
+#add sample names (columns)
+colnames(counts) = tcga_data@colData@rownames
+#add gene ids (rows)
+rownames(counts) = SummarizedExperiment::rowData(tcga_data)@rownames
+
+```
+
+# Remove samples that were filtered out in the sample metadata
+```{r}
+
+#find overlap with previously filtered metadata
+to_keep = colnames(counts) %in% sample_metadata$barcode
+#filter counts
+counts = counts[,to_keep]
+
+#clean up
+rm(to_keep)
+
+```
+
+
+```{r}
+
+#make a counts object
+dge = DGEList(counts)
+
+#filter out genes with low counts
+source("functions/Filter_Counts_Function.R")
+dge = filter_counts(dge, 850)
+
+#calculate library size normalization
+dge = calcNormFactors(dge)
+
+#make a design matrix
+design_vector = as.vector(sample_metadata$tumor_descriptor)
+design_matrix = model.matrix(~ 0 + design_vector)
+
+#Calculate variance weights
+voom_object = voom(dge, design_matrix, plot = TRUE)
+
+#Fit a linear model
+fit = lmFit(voom_object, design_matrix)
+
+#Smooth standard errors
+fit = eBayes(fit)
+
+#clean up
+rm(filter_counts)
+
+```
+
+# MDS Plot
+```{r}
+
+
+plotMDS(dge,
+        labels = sample_metadata$sample_id)
+
+```
+
+# Create a normalized data frame with sample info
+```{r}
+
+normalized_data = as.data.frame(t(voom_object$E)) |> 
+    merge(y = sample_metadata, by = "row.names") 
+
+rownames(normalized_data) = normalized_data$sample_id
+
+columns_to_keep = grep("ENS", colnames(normalized_data))
+
+normalized_data = normalized_data[,columns_to_keep]
+
+```
+

@@ -1,0 +1,67 @@
+---
+title: "Sample Metadata"
+format: html
+---
+
+```{r}
+
+#| output: FALSE
+
+library(dplyr)
+library(stringr)
+
+```
+
+
+# Load data
+```{r}
+
+tcga_data = readRDS("../data/tcga_skcm_data.RDS")
+
+```
+
+# Metadata
+```{r}
+
+sample_metadata = as.data.frame(SummarizedExperiment::colData(tcga_data))
+
+#list tissue sites
+#unique(sample_metadata$site_of_resection_or_biopsy)
+
+source("functions/Tissue_Rollup.R")
+
+sample_metadata = sample_metadata |> 
+    #add generic identifier
+    dplyr::mutate(sample_id = paste0("mel", sprintf('%0.3d', 1:length(sample_metadata$patient)))) |> 
+    #move sample id to front
+    dplyr::select(sample_id, everything()) |> 
+    #remove columns
+    dplyr::select(!contains("paper_")) |> 
+    #turn stage into factor
+    dplyr::mutate(ajcc_pathologic_stage = factor(sample_metadata$ajcc_pathologic_stage), .keep = "unused") |> 
+    #change tumor_descriptor column to factor
+    dplyr::mutate(tumor_descriptor = factor(sample_metadata$tumor_descriptor, levels = c("Primary", "Metastatic"))) |> 
+    #remove samples without stage information
+    dplyr::filter(ajcc_pathologic_stage != "Not Reported") |> 
+    #add tissue rollup
+    dplyr::mutate(tissue_rollup = case_when(
+        site_of_resection_or_biopsy %in% Tissue_Terms$Cutaneous ~ "Cutanous",
+        site_of_resection_or_biopsy %in% Tissue_Terms$Lymph_Nodes ~ "Lymph_Nodes",
+        site_of_resection_or_biopsy %in% Tissue_Terms$CNS ~ "CNS",
+        site_of_resection_or_biopsy %in% Tissue_Terms$Mucosal ~ "Mucosal",
+        site_of_resection_or_biopsy %in% Tissue_Terms$Organ ~ "Organ",
+        site_of_resection_or_biopsy %in% Tissue_Terms$Other ~ "Other"
+    )) |> 
+    #censor for survival
+    dplyr::mutate(survial_censor = as.integer(ifelse(is.na(days_to_death) == TRUE, "0", "1"))) |> 
+    #days until last follow up or death
+    dplyr::mutate(last_event = ifelse(survial_censor == "1", days_to_death, days_to_last_follow_up))
+
+#with(sample_metadata, table(site_of_resection_or_biopsy, tissue_rollup))
+
+#cleanup
+rm(Tissue_Terms)
+
+```
+
+

@@ -1,0 +1,22 @@
+"0",""
+"0","#| output: FALSE"
+"0",""
+"0","library(TCGAbiolinks)"
+"2","Registered S3 methods overwritten by 'dbplyr':
+  method         from
+  print.tbl_lazy     
+  print.tbl_sql      
+"
+"2","Registered S3 method overwritten by 'data.table':
+  method           from
+  print.data.table     
+"
+"0","library(SummarizedExperiment)"
+"2","Loading required package: MatrixGenerics
+"
+"2","Loading required package: matrixStats
+"
+"2","Error in value[[3L]](cond) : 
+  Package ‘matrixStats’ version 1.1.0 cannot be unloaded:
+ Error in unloadNamespace(package) : namespace ‘matrixStats’ is imported by ‘MatrixGenerics’ so cannot be unloaded
+"

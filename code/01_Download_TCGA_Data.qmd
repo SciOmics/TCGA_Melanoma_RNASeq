@@ -1,0 +1,70 @@
+---
+title: "Download TCGA Data"
+format: html
+---
+
+```{r}
+
+#| output: FALSE
+
+library(TCGAbiolinks)
+library(SummarizedExperiment)
+library(dplyr)
+
+```
+
+# Check available data
+```{r}
+
+#Check projects available
+GDCprojects = getGDCprojects()
+
+#Find the skin cancer melanoma project
+grep("SK", GDCprojects$id, value = TRUE)
+
+#Summary of skin cancer melanoma project
+TCGAbiolinks:::getProjectSummary("TCGA-SKCM")
+
+#Construct query
+query_TCGA = GDCquery(
+  project = "TCGA-SKCM",
+  data.category = "Transcriptome Profiling",
+  data.type = "Gene Expression Quantification",
+  experimental.strategy = "RNA-Seq",
+  workflow.type = "STAR - Counts",
+  sample.type = c("Primary Tumor", "Metastatic")
+)
+
+#Files resulting from query
+skcm_res = getResults(query_TCGA)
+
+#Table of metastatic vs primary cases
+table(skcm_res$sample_type)
+
+
+```
+
+
+# Download data
+```{r}
+
+#Download files
+GDCdownload(query = query_TCGA)
+
+#Read in the downloaded files
+tcga_data = GDCprepare(query_TCGA)
+
+#clean up 
+rm(list = c("GDCprojects", "query_TCGA", "skcm_res"))
+
+```
+
+# Save downloaded data as an R object
+```{r}
+
+saveRDS(object = tcga_data,
+        file = "tcga_skcm_data.RDS",
+        compress = FALSE)
+
+```
+

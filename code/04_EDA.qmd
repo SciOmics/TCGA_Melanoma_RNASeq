@@ -1,0 +1,102 @@
+---
+title: "Exploratory Data Analysis"
+format: html
+---
+
+```{r}
+
+#| output: FALSE
+
+library(dplyr)
+library(mixOmics)
+library(wesanderson)
+
+```
+
+# Color palette
+```{r}
+
+palette_discrete = wes_palette("Darjeeling1", 5, type = "discrete")
+wes_palette("Darjeeling1", 5, type = "discrete")
+
+palette_continuous = wes_palette("Zissou1", 100, type = "continuous")
+wes_palette("Zissou1", 100, type = "continuous")
+
+```
+
+
+# PCA
+```{r}
+
+pca_results = prcomp(normalized_data)
+
+rownames(sample_metadata) = sample_metadata$sample_id
+
+pca_results$x = merge(pca_results$x, sample_metadata, by = "row.names")
+
+ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, label = Row.names, color = tumor_descriptor)) +
+    geom_point() +
+    geom_label(size = 2) +
+    scale_color_manual(values = palette_discrete[c(5,1)]) +
+    theme_classic()
+
+ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = tissue_rollup)) +
+    geom_point() +
+    scale_color_manual(values = palette_discrete) +
+    theme_classic()
+
+ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = ajcc_pathologic_stage)) +
+    geom_point() +
+    scale_color_manual(values = wes_palette("Zissou1", 13, type = "continuous")) +
+    theme_classic()
+
+```
+
+
+```{r}
+
+colnames(SummarizedExperiment::colData(tcga_data))
+
+table(tcga_data@colData$vital_status)
+table(tcga_data@colData$ajcc_pathologic_stage)
+table(tcga_data@colData$definition)
+table(tcga_data@colData$gender)
+table(tcga_data@colData$race)
+
+dim(assay(tcga_data)) 
+
+#create a data frame of sample info
+follow_up = data.frame(patient_id = tcga_data$patient,
+                       sex = tcga_data$gender,
+                       ajcc_stage = tcga_data$ajcc_pathologic_stage,
+                       year_of_diagnosis = tcga_data$year_of_diagnosis,
+                        days_to_last_follow_up = tcga_data$days_to_last_follow_up, 
+                       days_to_death = tcga_data$days_to_death)
+
+#add additional info to sample info data frame
+follow_up = follow_up |> 
+    #censor for survival
+    dplyr::mutate(survial_censor = as.integer(ifelse(is.na(days_to_death) == TRUE, "0", "1"))) |> 
+    #days until last follow up or death
+    dplyr::mutate(last_event = ifelse(survial_censor == "1", days_to_death, days_to_last_follow_up)) |> 
+    #group year of diagnosis into decades
+    dplyr::mutate(decade_of_diagnosis = case_when(
+        year_of_diagnosis >= 1970 & year_of_diagnosis < 1980 ~ "1970s",
+        year_of_diagnosis >= 1980 & year_of_diagnosis < 1990 ~ "1980s",
+        year_of_diagnosis >= 1990 & year_of_diagnosis < 2000 ~ "1990s",
+        year_of_diagnosis >= 2000 & year_of_diagnosis < 2010 ~ "2000s",
+        year_of_diagnosis >= 2010 & year_of_diagnosis < 2020 ~ "2010s",
+        year_of_diagnosis >= 2020 ~ "2020s"
+    ))
+
+
+survfit2(Surv(last_event, survial_censor) ~ decade_of_diagnosis, data = follow_up) |> 
+    ggsurvfit() +
+    add_pvalue() +
+    add_risktable() +
+    scale_color_manual(values = c("red", "orange", "blue", "green", "purple"))
+
+coxph(Surv(last_event, survial_censor) ~ decade_of_diagnosis + ajcc_stage, data = follow_up)
+
+
+```

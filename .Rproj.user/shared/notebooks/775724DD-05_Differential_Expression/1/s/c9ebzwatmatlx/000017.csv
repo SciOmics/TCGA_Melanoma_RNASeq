@@ -1,0 +1,7 @@
+"0","diff_exp_table$gene_symbol = mapIds(org.Hs.eg.db,
+                                    keys = rownames(diff_exp_table),
+                                    keytype = ""ENSEMBL"",
+                                    column = ""SYMBOL"")
+"
+"2","'select()' returned 1:many mapping between keys and columns
+"

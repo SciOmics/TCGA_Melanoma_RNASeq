@@ -1,0 +1,8 @@
+"0",""
+"0","#counts"
+"0","counts = tcga_data@assays@data$unstranded"
+"0","#add sample names (columns)"
+"0","colnames(counts) = tcga_data@colData@rownames"
+"0","#add gene ids (rows)"
+"0","rownames(counts) = SummarizedExperiment::rowData(tcga_data)@rownames"
+"0",""

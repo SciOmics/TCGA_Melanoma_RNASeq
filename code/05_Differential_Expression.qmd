@@ -1,0 +1,55 @@
+---
+title: "Differential Expression Analysis"
+format: html
+editor: source
+---
+
+```{r}
+
+library(dplyr)
+library(EnhancedVolcano)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+
+```
+
+# Differential Expression
+```{r}
+
+diff_exp = makeContrasts(design_vectorMetastatic - design_vectorPrimary, levels = colnames(coef(fit)))
+diff_exp = contrasts.fit(fit, diff_exp)
+diff_exp = eBayes(diff_exp)
+
+#Make a dataframe of genes with differential expression info
+diff_exp_table = topTable(diff_exp, sort.by = "P", n = Inf)
+
+```
+
+
+# Add gene symbols
+```{r}
+
+#Need to remove decimal and trailing numbers from ENSEMBL ids (these are version numbers)
+rownames(diff_exp_table) = gsub(pattern = "\\..*",
+                                replacement = "",
+                                x = rownames(diff_exp_table))
+
+#Add gene symbols
+diff_exp_table$gene_symbol = mapIds(org.Hs.eg.db,
+                                    keys = rownames(diff_exp_table),
+                                    keytype = "ENSEMBL",
+                                    column = "SYMBOL")
+
+
+```
+
+# Volcano Plot
+```{r}
+
+EnhancedVolcano(diff_exp_table,
+                lab = diff_exp_table$gene_symbol,
+                x = "logFC",
+                y = "adj.P.Val")
+
+```
+
