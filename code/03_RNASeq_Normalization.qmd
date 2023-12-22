@@ -65,7 +65,7 @@ fit = lmFit(voom_object, design_matrix)
 fit = eBayes(fit)
 
 #clean up
-rm(filter_counts)
+rm(list = c("filter_counts", "design_vector", "design_matrix", "dge"))
 
 ```
 
@@ -89,6 +89,14 @@ rownames(normalized_data) = normalized_data$sample_id
 columns_to_keep = grep("ENS", colnames(normalized_data))
 
 normalized_data = normalized_data[,columns_to_keep]
+
+#Need to remove decimal and trailing numbers from ENSEMBL ids (these are version numbers)
+colnames(normalized_data) = gsub(pattern = "\\..*",
+                                replacement = "",
+                                x = colnames(normalized_data))
+
+#clean up
+rm(columns_to_keep)
 
 ```
 

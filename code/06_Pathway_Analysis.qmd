@@ -3,3 +3,48 @@ title: "Pathway Analyses"
 format: html
 ---
 
+```{r}
+
+library(dplyr)
+library(clusterProfiler)
+
+```
+
+
+# DEG Enrichment Pathway Analysis
+```{r}
+
+significant_genes = diff_exp_table |> 
+  dplyr::filter(adj.P.Val <= 0.05 & abs(logFC) > 1.5)
+
+enrich_GO_results = enrichGO(significant_genes$entrez_symbol,
+                             OrgDb = org.Hs.eg.db,
+                             ont = "ALL")
+
+clusterProfiler::dotplot(enrich_GO_results, showCategory = 20)
+
+```
+
+
+
+
+# GSEA
+```{r}
+
+#rank genes
+ranked_genes = diff_exp_table |> 
+  arrange(desc(logFC))
+#make into a named vector
+ranked_genes = setNames(ranked_genes$logFC, ranked_genes$entrez_symbol)
+
+#GSEA
+GESA_KEGG_results = clusterProfiler::gseKEGG(ranked_genes)
+GESA_GO_results = clusterProfiler::gseGO(ranked_genes, OrgDb = org.Hs.eg.db)
+
+#Plot pathways
+clusterProfiler::dotplot(GESA_KEGG_results, showCategory = 20, split = ".sign") + facet_grid(.~.sign)
+clusterProfiler::dotplot(GESA_GO_results, showCategory = 20, split = ".sign") + facet_grid(.~.sign)
+
+```
+
+# Other visualizations

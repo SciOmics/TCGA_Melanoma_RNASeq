@@ -3,3 +3,311 @@ title: "Gene Signature Analysis"
 format: html
 ---
 
+```{r}
+
+library(dplyr)
+library(readxl)
+library(GSVA)
+library(ggplot2)
+library(singscore)
+library(survival)
+library(ggsurvfit)
+library(mclust)
+
+ggplot2::theme_set(ggplot2::theme_classic())
+
+```
+
+# Epithelial & Mesenchymal Signatures
+```{r}
+
+#Make a signatures list
+signatures = list()
+
+#Read in signatures
+signatures$patient_EMT = read_excel("../references/Tan_2014_EMT_Signatures.xlsx", sheet = "Tumor")
+
+signatures$cell_line_EMT = read_excel("../references/Tan_2014_EMT_Signatures.xlsx", sheet = "Cell_Line")
+
+#Separate into epithelial and mesenchymal signatures
+signatures$patient_epi = signatures$patient_EMT |> 
+  dplyr::filter(Category == "Epi") |> 
+  pull("Gene_Symbol")
+
+signatures$patient_mes = signatures$patient_EMT |> 
+  dplyr::filter(Category == "Mes") |> 
+  pull("Gene_Symbol")
+
+signatures$cell_epi = signatures$cell_line_EMT |> 
+  dplyr::filter(Category == "Epi") |> 
+  pull("Gene_Symbol")
+
+signatures$cell_mes = signatures$cell_line_EMT |> 
+  dplyr::filter(Category == "Mes") |> 
+  pull("Gene_Symbol")
+
+#Create a signature out of overlaps
+signatures$signatures_epi_overlap = signatures$patient_epi[signatures$patient_epi %in% signatures$cell_epi]
+  
+signatures$signatures_mes_overlap = signatures$patient_mes[signatures$patient_mes %in% signatures$cell_mes]
+
+#Clean up
+signatures = signatures[-c(1,2)]
+  
+
+```
+
+# Prep data
+```{r}
+
+#Change column names of normalized data from ensembl ids to gene symbols
+colnames(normalized_data) = mapIds(org.Hs.eg.db,
+                                    keys = colnames(normalized_data),
+                                    keytype = "ENSEMBL",
+                                    column = "SYMBOL")
+
+```
+
+
+# GSVA
+```{r}
+
+#GSVA
+gsva_results = gsva(expr = as.matrix(t(normalized_data)),
+                    gset.idx.list = signatures)
+
+#Make a dataframe of results
+gsva_results = as.data.frame(t(gsva_results))
+
+#Add sample metadata
+gsva_results = merge(gsva_results, 
+                     sample_metadata, 
+                     by.x = "row.names",
+                     by.y = "sample_id")
+
+
+```
+
+## Plots
+```{r}
+
+##MAKE INTO A FUNCTION##
+
+ggplot(gsva_results, aes(x = patient_epi, y = patient_mes, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Epithelial", y = "Mesenchymal", title = "Patient Tumor Derived Signatures") +
+  theme_classic()
+
+ggplot(gsva_results, aes(x = cell_epi, y = cell_mes, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Epithelial", y = "Mesenchymal", title = "Cell Line Derived Signatures") +
+  theme_classic()
+
+ggplot(gsva_results, aes(x = signatures_epi_overlap, y = signatures_mes_overlap, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Epithelial", y = "Mesenchymal", title = "Overlapping Derived Signatures") +
+  theme_classic()
+
+
+```
+
+Plot survival by scores; try a combined score of epi - mes
+
+# ssGSEA
+```{r}
+
+#ssGSEA
+ssgsea_results = gsva(expr = as.matrix(t(normalized_data)), 
+                      gset.idx.list = signatures, 
+                      method = 'ssgsea')
+
+#Make a dataframe of results
+ssgsea_results = as.data.frame(t(ssgsea_results))
+
+#Add sample metadata
+ssgsea_results = merge(ssgsea_results, 
+                     sample_metadata, 
+                     by.x = "row.names",
+                     by.y = "sample_id")
+
+
+```
+
+## Plots
+```{r}
+
+ggplot(ssgsea_results, aes(x = patient_epi, y = patient_mes, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Epithelial", y = "Mesenchymal", title = "Patient Tumor Derived Signatures") +
+  theme_classic()
+
+ggplot(ssgsea_results, aes(x = cell_epi, y = cell_mes, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Epithelial", y = "Mesenchymal", title = "Cell Line Derived Signatures") +
+  theme_classic()
+
+ggplot(ssgsea_results, aes(x = signatures_epi_overlap, y = signatures_mes_overlap, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Epithelial", y = "Mesenchymal", title = "Overlapping Derived Signatures") +
+  theme_classic()
+
+```
+
+## Survival
+
+### Divide by GMM
+```{r}
+
+#divide into singscore high vs low using a Guassian Mixture Model
+gmm_results = Mclust(ssgsea_results$patient_mes, G = 2)
+ssgsea_results$patient_mes_gmm = gmm_results$classification
+
+ggplot(ssgsea_results, aes(x = patient_mes, fill = as.factor(patient_mes_gmm))) +
+  geom_density()
+
+ssgsea_results = ssgsea_results |> 
+  mutate(patient_mes_gmm_group = case_when(patient_mes_gmm == "1" ~ "Low",
+                                           patient_mes_gmm == "2" ~ "High",
+                                           .default = "unknown"))
+
+
+#Survival
+ssgsea_results |> 
+  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
+  survfit2(Surv(last_event, survial_censor) ~ patient_mes_gmm_group , data = _) |>
+    ggsurvfit() +
+    add_pvalue() +
+    add_risktable(risktable_stats = "n.risk")
+
+#Cox PH
+ssgsea_results |> 
+  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
+  coxph(Surv(last_event, survial_censor) ~ patient_mes_gmm_group, data = _)
+
+ssgsea_results |> 
+  coxph(Surv(last_event, survial_censor) ~ patient_mes_gmm_group + ajcc_pathologic_stage + tissue_rollup, data = _)
+
+ssgsea_results |> 
+  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  coxph(Surv(last_event, survial_censor) ~ patient_mes_gmm_group + ajcc_pathologic_stage, data = _)
+
+
+```
+
+### Divide at Median
+```{r}
+
+#try high and low at median
+ssgsea_results = ssgsea_results |> 
+  mutate(patient_mes_division = ifelse(patient_mes > median(patient_mes), "High", "Low"))
+
+ggplot(ssgsea_results, aes(x = patient_mes, fill = as.factor(patient_mes_division))) +
+  geom_density()
+
+ssgsea_results |> 
+  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
+  survfit2(Surv(last_event, survial_censor) ~ patient_mes_division , data = _) |>
+    ggsurvfit() +
+    add_pvalue() +
+    add_risktable(risktable_stats = "n.risk")
+
+
+```
+
+
+# Singscore of combined epithelial and Mesenchymal
+```{r}
+
+#make an empty data frame for results
+#rank data
+ranked_df = rankGenes(t(normalized_data))
+#run singscore
+ss_patient_signature = simpleScore(ranked_df, upSet = signatures$patient_mes, downSet = signatures$patient_epi)
+ss_cell_signature = simpleScore(ranked_df, upSet = signatures$cell_mes, downSet = signatures$cell_epi)
+ss_cell_signature = simpleScore(ranked_df, upSet = signatures$signatures_mes_overlap, downSet = signatures$signatures_epi_overlap)
+
+#add sample metadata
+ss_patient_signature = merge(ss_patient_signature, 
+                     sample_metadata, 
+                     by.x = "row.names",
+                     by.y = "sample_id")
+
+
+```
+
+## Plots
+```{r}
+
+ggplot(ss_patient_signature, aes(x = tumor_descriptor, y = TotalScore, color = tissue_rollup)) +
+  geom_jitter(width = 0.25) +
+  scale_color_manual(values = palette_discrete) +
+  labs(x= "", y = "SingScore", title = "Patient Tumor Derived Signature") +
+  theme_classic() 
+
+# add mean bar, p-value, 95% CI, number of samples per group, center title
+
+#Cutaneous sites only
+ss_patient_signature |> 
+  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  ggplot(aes(x = tumor_descriptor, y = TotalScore, color = tumor_descriptor)) +
+  geom_jitter(width = 0.2) +
+  stat_summary(aes(group = tumor_descriptor), fun.y = mean, geom = 'crossbar', width = 0.3, color = "black") +
+  scale_color_manual(values = c(palette_discrete[5], palette_discrete[1])) +
+  labs(x= "", y = "SingScore", title = "Patient Tumor Derived Signature - Only Cutaneous Samples", subtitle = "Higher Scores Correspond to More Mesenchymal Like") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+ss_patient_signature |> 
+  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  ggplot(aes(x = ajcc_pathologic_stage, y = TotalScore, color = tumor_descriptor)) +
+  geom_jitter(width = 0.2) +
+  stat_summary(aes(group = tumor_descriptor), fun.y = mean, geom = 'crossbar', width = 0.3, color = "black") +
+  scale_color_manual(values = c(palette_discrete[5], palette_discrete[1])) +
+  labs(x= "", y = "SingScore", title = "Patient Tumor Derived Signature - Only Cutaneous Samples", subtitle = "Higher Scores Correspond to More Mesenchymal Like") +
+  theme_classic() 
+
+
+```
+
+## Survival
+```{r}
+
+#filter to primary cutanoues
+
+#divide into singscore high vs low; try using gmm
+gmm_results = Mclust(ss_patient_signature$TotalScore)
+ss_patient_signature$gmm = gmm_results$classification
+
+ggplot(ss_patient_signature, aes(x = TotalScore, fill = as.factor(gmm))) +
+  geom_density()
+
+ss_patient_signature |> 
+  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  survfit2(Surv(last_event, survial_censor) ~ gmm , data = _) |>
+    ggsurvfit() +
+    add_pvalue() +
+    add_risktable(risktable_stats = "n.risk")
+
+
+
+
+
+```
+
+
+#To do:
+make a list of signature scores and add to that
+Average ssGSEA, Singscore and GSVA scores
+Visualize tissue rollup (e.g. liver, LN)
+Control for stage
+Filter to cutaneous sites only
+Fix cutaneous spelling
+Fix "GESA" to GSEA
+Bayessian statistics on singscore values
+filter to cutaneous only and do diff exp to derive a metastatic signature
