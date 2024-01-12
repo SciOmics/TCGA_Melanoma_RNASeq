@@ -1,5 +1,0 @@
-"0",""
-"0","diff_exp <- makeContrasts(design_vectorMetastatic - design_vectorPrimary, levels = colnames(coef(fit)))"
-"0","diff_exp <- contrasts.fit(fit, diff_exp)"
-"0","diff_exp <- eBayes(diff_exp)"
-"0",""
