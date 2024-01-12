@@ -64,4 +64,12 @@ rm(Tissue_Terms)
 
 ```
 
+# Save
+```{r}
+
+#write.csv(sample_metadata, file = "../outputs/sample_metadata.csv")
+
+#some of the columns are lists, which won't save. 
+
+```
 

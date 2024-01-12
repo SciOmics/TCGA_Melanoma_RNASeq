@@ -162,6 +162,7 @@ ggplot(ssgsea_results, aes(x = signatures_epi_overlap, y = signatures_mes_overla
 ## Survival
 
 ### Divide by GMM
+
 ```{r}
 
 #divide into singscore high vs low using a Guassian Mixture Model
@@ -191,14 +192,14 @@ ssgsea_results |>
   coxph(Surv(last_event, survial_censor) ~ patient_mes_gmm_group, data = _)
 
 ssgsea_results |> 
-  coxph(Surv(last_event, survial_censor) ~ patient_mes_gmm_group + ajcc_pathologic_stage + tissue_rollup, data = _)
-
-ssgsea_results |> 
-  dplyr::filter(tissue_rollup == "Cutanous") |> 
-  coxph(Surv(last_event, survial_censor) ~ patient_mes_gmm_group + ajcc_pathologic_stage, data = _)
+  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
+  coxph(Surv(last_event, survial_censor) ~ patient_mes_gmm_group + as.integer(stage) + year_of_diagnosis, data = _)
 
 
 ```
+
+Oddly, mesenchymal score high patients seem to have better overall survival. Is the gene signature not appropriate? Am I missing a confounder? 
+Try with epi signatures instead
 
 ### Divide at Median
 ```{r}
@@ -220,6 +221,45 @@ ssgsea_results |>
 
 ```
 
+```{r}
+
+summary(lm(patient_mes ~ year_of_diagnosis, data = ssgsea_results))
+
+ggplot(ssgsea_results, aes(x = year_of_diagnosis, y = patient_mes)) +
+  geom_point() +
+  geom_smooth(method = lm)
+
+coxph(Surv(last_event, survial_censor) ~ year_of_diagnosis, data = ssgsea_results)
+
+ssgsea_results |> 
+  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
+  ggplot(aes(x = year_of_diagnosis, y = last_event, color = as.factor(survial_censor))) +
+    geom_point() +
+    scale_color_manual(values = c("grey", "black")) +
+    geom_smooth(method = lm, linetype = "dashed", size = 0.5)
+
+
+```
+
+
+#### Epithelial
+```{r}
+
+ssgsea_results = ssgsea_results |> 
+  mutate(patient_epi_division = ifelse(patient_epi > median(patient_epi), "High", "Low"))
+
+ggplot(ssgsea_results, aes(x = patient_epi, fill = as.factor(patient_epi_division))) +
+  geom_density()
+
+ssgsea_results |> 
+  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
+  survfit2(Surv(last_event, survial_censor) ~ patient_epi_division , data = _) |>
+    ggsurvfit() +
+    add_pvalue() +
+    add_risktable(risktable_stats = "n.risk")
+
+
+```
 
 # Singscore of combined epithelial and Mesenchymal
 ```{r}
@@ -300,6 +340,7 @@ ss_patient_signature |>
 
 ```
 
+## Is year of diagnosis a confounder?
 
 #To do:
 make a list of signature scores and add to that
@@ -311,3 +352,5 @@ Fix cutaneous spelling
 Fix "GESA" to GSEA
 Bayessian statistics on singscore values
 filter to cutaneous only and do diff exp to derive a metastatic signature
+
+# plot all data for correlations

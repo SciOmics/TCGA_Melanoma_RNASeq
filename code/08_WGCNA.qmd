@@ -3,3 +3,213 @@ title: "WGCNA"
 format: html
 ---
 
+```{r}
+
+library(WGCNA)
+library(ggplot2)
+library(dplyr)
+library(doParallel)
+library(rstatix)
+library(clusterProfiler)
+library(survival)
+library(ggsurvfit)
+
+ggplot2::theme_set(ggplot2::theme_classic())
+
+enableWGCNAThreads()
+allowWGCNAThreads()
+
+```
+
+# Load data
+```{r}
+
+normalized_data = read.csv("../outputs/normalized_expression.csv", row.names = 1)
+
+```
+
+# Soft thresholding
+```{r}
+
+#Signed network
+soft_threshold_signed = pickSoftThreshold(normalized_data,
+                                    networkType = "signed")
+
+ggplot(soft_threshold_signed$fitIndices, aes(x = Power, y = `SFT.R.sq`, lab = )) +
+  geom_point() +
+  geom_hline(yintercept = 0.85, linetype = "dashed") +
+  geom_vline(xintercept = 5, linetype = "dashed", size = 0.2)
+
+ggplot(soft_threshold_signed$fitIndices, aes(x = Power, y = `mean.k.`, lab = )) +
+  geom_point()
+
+#Unsigned network
+soft_threshold_unsigned = pickSoftThreshold(normalized_data,
+                                    networkType = "unsigned")
+
+ggplot(soft_threshold_unsigned$fitIndices, aes(x = Power, y = `SFT.R.sq`, lab = )) +
+  geom_point() +
+  geom_hline(yintercept = 0.85, linetype = "dashed") +
+  geom_vline(xintercept = 5, linetype = "dashed", size = 0.2)
+
+ggplot(soft_threshold_unsigned$fitIndices, aes(x = Power, y = `mean.k.`, lab = )) +
+  geom_point()
+
+
+```
+
+```{r}
+
+modules = blockwiseModules(normalized_data,
+                 maxBlockSize = ncol(normalized_data),
+                 networkType = "signed",
+                 power = 6,
+                 randomSeed = 123)
+
+table(modules$colors)
+
+plotDendroAndColors(modules$dendrograms[[1]], colors = modules$colors, dendroLabels = FALSE)
+
+```
+
+# Save WGCNA Object
+```{r}
+
+saveRDS(modules, file = "../outputs/wgcna_object.rds")
+
+```
+
+# Load WGCNA Object
+```{r}
+
+modules = readRDS("../outputs/wgcna_object.rds")
+
+```
+
+
+```{r}
+
+# adjacency = adjacency(normalized_data, 
+#                       power = 5, 
+#                       type = "signed")
+# 
+# library(igraph)
+# 
+# graph_object = graph_from_adjacency_matrix(adjacency[1:100,1:100],
+#                             mode = "undirected",
+#                             weighted = TRUE)
+# 
+# plot(graph_object)
+
+```
+
+
+# get module eigenvalues for each sample
+```{r}
+
+View(modules$MEs)
+
+annotated_me = merge(modules$MEs, sample_metadata, by.x = "row.names", by.y = "sample_id")
+rownames(annotated_me) = annotated_me$Row.names
+annotated_me = annotated_me[,c(-1)]
+
+```
+
+# Find modules different between primary and metastatic
+```{r}
+
+module_stats = annotated_me |> 
+  dplyr::select(starts_with("ME"), tumor_descriptor) |> 
+  tidyr::pivot_longer(cols = contains("ME"), names_to = "Module", values_to = "Value") |> 
+  group_by(Module) |> 
+  t_test(Value ~ tumor_descriptor) |> 
+  adjust_pvalue(method = "BH")
+  
+```
+
+## Plots
+```{r}
+
+ggplot(annotated_me, aes(x = tumor_descriptor, y = MEblack, color = tumor_descriptor)) +
+  geom_jitter(width = 0.2) +
+  stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
+  theme(legend.position = "none")
+
+
+
+#Not working properly
+plot_modules = function(df, module_name){
+  ggplot(data = df, aes(x = tumor_descriptor, y = module_name)) +
+    geom_jitter(width = 0.2) 
+}
+
+plot_modules(annotated_me, "MEblack")
+
+
+```
+# Survival
+```{r}
+
+annotated_me |>
+  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  mutate(MEblack_division = ifelse(MEblack > median(MEblack), "high", "low")) |> 
+  survfit2(Surv(last_event, survial_censor) ~ MEblack_division , data = _) |>
+  ggsurvfit() +
+  add_risktable(risktable_stats = "n.risk") +
+  add_pvalue()
+
+
+
+```
+
+
+# Heatmap
+```{r}
+
+annotated_me |> 
+  dplyr::select(starts_with("ME")) |> 
+  as.matrix() |> 
+  heatmap(scale = "column", labRow = annotated_me$tumor_descriptor)
+
+```
+
+# Key drivers
+```{r}
+
+
+
+```
+
+
+# Module pathway analysis
+```{r}
+
+#Create data frame with genes and corresponding module
+module_genes = as.data.frame(modules$colors)
+module_genes$ENSEMBL = row.names(module_genes)
+names(module_genes)[1] = "Module"
+
+#Add gene symbols
+module_genes$Symbol = AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db,
+                                            keys = module_genes$ENSEMBL,
+                                            column = "SYMBOL",
+                                            keytype = "ENSEMBL"
+                                            )
+
+#Add entrez ids
+module_genes$ncbi = AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db,
+                                            keys = module_genes$ENSEMBL,
+                                            column = "ENTREZID",
+                                            keytype = "ENSEMBL"
+                                            )
+
+enrich_kegg_results = module_genes |> 
+  filter(Module == "black") |> 
+  pull(ncbi) |> 
+  na.omit() |> 
+  enrichKEGG()
+
+
+
+```
+

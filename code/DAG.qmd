@@ -1,0 +1,43 @@
+---
+title: "DAG"
+format: html
+---
+
+```{r}
+
+library(ggdag)
+library(ggplot2)
+
+```
+
+```{r}
+
+dagify("Survival" ~ "EMT_Score") |> 
+  ggdag() +
+    theme_dag()
+
+```
+
+```{r}
+
+survival_dag = dagify(Survival ~ EMT_Score,
+                      EMT_Score ~ Disease_Stage,
+                      Survival ~ Disease_Stage + Age,
+                      labels = c("Survival" = "Survival",
+                                 "EMT_Score" = "EMT Score",
+                                 "Disease_Stage" = "Disease Stage",
+                                 "Age" = "Age"),
+                      exposure = "EMT_Score",
+                      outcome = "Survival")
+
+ggdag(survival_dag, text = FALSE, use_labels = "label") +
+    theme_dag()
+
+#Survival
+#EMT Score
+#Disease Stage
+#Age
+
+
+```
+

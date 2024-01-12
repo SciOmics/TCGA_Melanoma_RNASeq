@@ -13,6 +13,14 @@ library(limma)
 
 ```
 
+# Load data
+```{r}
+
+#tcga_data = readRDS("../data/tcga_skcm_data.RDS")
+
+```
+
+
 # Make counts matrix
 ```{r}
 
@@ -39,6 +47,7 @@ rm(to_keep)
 ```
 
 
+# Fit model
 ```{r}
 
 #make a counts object
@@ -65,7 +74,7 @@ fit = lmFit(voom_object, design_matrix)
 fit = eBayes(fit)
 
 #clean up
-rm(list = c("filter_counts", "design_vector", "design_matrix", "dge"))
+rm(list = c("filter_counts", "design_vector", "design_matrix"))
 
 ```
 
@@ -97,6 +106,13 @@ colnames(normalized_data) = gsub(pattern = "\\..*",
 
 #clean up
 rm(columns_to_keep)
+
+```
+
+## Save
+```{r}
+
+write.csv(normalized_data, file = "../outputs/normalized_expression.csv")
 
 ```
 
