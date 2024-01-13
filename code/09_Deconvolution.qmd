@@ -1,0 +1,120 @@
+---
+title: "Deconvolution"
+format: html
+---
+
+```{r}
+
+library(immunedeconv)
+library(ggplot2)
+
+theme_set(theme_classic())
+
+```
+
+# Load data
+```{r}
+
+normalized_data = read.csv("../outputs/normalized_expression.csv", row.names = 1)
+
+```
+
+```{r}
+
+#change form Ensembl to HGNC
+colnames(normalized_data) = AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db,
+                                            keys = colnames(normalized_data),
+                                            column = "SYMBOL",
+                                            keytype = "ENSEMBL"
+                                            )
+
+#Make a list to put deconvolution results in.
+#make a multicore function that runs multiple methods; 
+#find consensus?
+
+
+deconvolute_results_quantiseq = deconvolute(t(normalized_data), 
+                                  method = "quantiseq",
+                                  tumor = TRUE)
+
+deconvolute_results_epic = deconvolute(t(normalized_data), 
+                                  method = "epic",
+                                  tumor = TRUE)
+
+deconvolute_results_mcp = deconvolute(t(normalized_data), 
+                                  method = "mcp_counter",
+                                  tumor = TRUE)
+
+deconvolute_results_xcell = deconvolute(t(normalized_data), 
+                                  method = "xcell",
+                                  tumor = TRUE)
+
+deconvolute_results_ciber = deconvolute(t(normalized_data), 
+                                  method = "cibersort_abs",
+                                  tumor = TRUE)
+
+deconvolute_results_timer = deconvolute(t(normalized_data), 
+                                  method = "timer",
+                                  tumor = TRUE)
+
+deconvolute_results_contme = deconvolute(t(normalized_data), 
+                                  method = "consensus_tme",
+                                  tumor = TRUE)
+
+deconvolute_results_abis = deconvolute(t(normalized_data), 
+                                  method = "abis",
+                                  tumor = TRUE)
+
+deconvolute_results_estimate = deconvolute(t(normalized_data), 
+                                  method = "estimate",
+                                  tumor = TRUE)
+
+#epic, quantiseq are percent composition values
+#xcell, mcp, abis are score values
+#estimate is a score values, but gives a tumor purity percent
+
+#look at tumor purity in LN vs. primary samples
+
+```
+
+     MCPcounter             EPIC        quanTIseq            xCell        CIBERSORT CIBERSORT (abs.)            TIMER     ConsensusTME             ABIS         ESTIMATE 
+   "mcp_counter"           "epic"      "quantiseq"          "xcell"      "cibersort"  "cibersort_abs"          "timer"  "consensus_tme"           "abis"       "estimate" 
+
+```{r}
+
+#Make a dataframe with overlapping cell types
+deconvolution_df = data.frame(t(deconvolute_results[11,]),
+                t(deconvolute_results_epic[8,]))
+deconvolution_df = deconvolution_df[-1,]
+colnames(deconvolution_df) = c("quantiseq", "epic")
+
+#Compare deconvolution results 
+ggplot(deconvolution_df, aes(x = as.numeric(quantiseq), y = as.numeric(epic))) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+
+deconvolution_epic_df = as.data.frame(t(deconvolute_results_epic))
+colnames(deconvolution_epic_df) = deconvolution_epic_df[1,]
+deconvolution_epic_df = deconvolution_epic_df[-1,]
+
+deconvolution_epic_df = deconvolution_epic_df |> 
+  merge(sample_metadata, by.x = "row.names", by.y = "sample_id")
+
+ggplot(deconvolution_epic_df, aes(x = tissue_rollup, y = as.numeric(`T cell CD4+`), color = tissue_rollup)) +
+  geom_jitter(width = 0.2) +
+  stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
+  labs(x = "Tissue of origin", y = "CD4 Fraction", title = "EPIC Deconvolution") +
+  theme(legend.position = "none")
+
+deconvolution_epic_df |> 
+  mutate(CD4_Grouping = ifelse(`T cell CD4+` > median(`T cell CD4+`), "High", "Low")) |> 
+  ggsurvfit::survfit2(survival::Surv(last_event, survial_censor) ~ CD4_Grouping , data = _) |>
+  ggsurvfit::ggsurvfit() +
+  ggsurvfit::add_risktable(risktable_stats = "n.risk") +
+  ggsurvfit::add_pvalue()
+
+
+
+```
+
