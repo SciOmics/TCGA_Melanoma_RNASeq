@@ -37,6 +37,8 @@ ggdag(survival_dag, text = FALSE, use_labels = "label") +
 #EMT Score
 #Disease Stage
 #Age
+#Tumor purity
+#Tissue
 
 
 ```

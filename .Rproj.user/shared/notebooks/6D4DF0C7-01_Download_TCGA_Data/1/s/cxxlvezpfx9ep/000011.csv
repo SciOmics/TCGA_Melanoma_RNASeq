@@ -1,6 +1,0 @@
-"0","#clean up 
-rm(list = c(""GDCprojects"", ""query_TCGA"", ""skcm_res""))
-"
-"2","Error in exists(cacheKey, where = .rs.WorkingDataEnv, inherits = FALSE) : 
-  invalid first argument
-"

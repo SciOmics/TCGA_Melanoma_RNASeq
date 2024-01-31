@@ -7,6 +7,11 @@ format: html
 
 library(immunedeconv)
 library(ggplot2)
+library(data.table)
+library(dplyr)
+
+# set_cibersort_binary("/Users/david/Library/Mobile Documents/com~apple~CloudDocs/Documents/Informatics/CIBERSORT/CIBERSORT.R")
+# set_cibersort_mat("/Users/david/Library/Mobile Documents/com~apple~CloudDocs/Documents/Informatics/CIBERSORT/LM22.txt")
 
 theme_set(theme_classic())
 
@@ -15,10 +20,18 @@ theme_set(theme_classic())
 # Load data
 ```{r}
 
-normalized_data = read.csv("../outputs/normalized_expression.csv", row.names = 1)
+#normalized expression data
+normalized_data = as.data.frame(fread("../outputs/normalized_expression.csv"))
+rownames(normalized_data) = normalized_data$V1
+normalized_data = normalized_data[,2:ncol(normalized_data)]
+
+#sample metadata
+sample_metadata = readRDS("../data/sample_metadata.rds")
+rownames(sample_metadata) = sample_metadata$sample_id
 
 ```
 
+# Format Gene Names
 ```{r}
 
 #change form Ensembl to HGNC
@@ -28,10 +41,14 @@ colnames(normalized_data) = AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db,
                                             keytype = "ENSEMBL"
                                             )
 
-#Make a list to put deconvolution results in.
-#make a multicore function that runs multiple methods; 
-#find consensus?
+```
 
+# Deconvolutions 
+```{r}
+
+#epic, quantiseq, cibersort/cibersort_abs are percent composition values
+#xcell, mcp, abis are score values
+#estimate is a score values, but gives a tumor purity percent
 
 deconvolute_results_quantiseq = deconvolute(t(normalized_data), 
                                   method = "quantiseq",
@@ -41,80 +58,250 @@ deconvolute_results_epic = deconvolute(t(normalized_data),
                                   method = "epic",
                                   tumor = TRUE)
 
-deconvolute_results_mcp = deconvolute(t(normalized_data), 
-                                  method = "mcp_counter",
-                                  tumor = TRUE)
-
-deconvolute_results_xcell = deconvolute(t(normalized_data), 
-                                  method = "xcell",
-                                  tumor = TRUE)
-
-deconvolute_results_ciber = deconvolute(t(normalized_data), 
-                                  method = "cibersort_abs",
-                                  tumor = TRUE)
-
-deconvolute_results_timer = deconvolute(t(normalized_data), 
-                                  method = "timer",
-                                  tumor = TRUE)
-
-deconvolute_results_contme = deconvolute(t(normalized_data), 
-                                  method = "consensus_tme",
-                                  tumor = TRUE)
-
-deconvolute_results_abis = deconvolute(t(normalized_data), 
-                                  method = "abis",
-                                  tumor = TRUE)
-
 deconvolute_results_estimate = deconvolute(t(normalized_data), 
                                   method = "estimate",
                                   tumor = TRUE)
 
-#epic, quantiseq are percent composition values
-#xcell, mcp, abis are score values
-#estimate is a score values, but gives a tumor purity percent
+#Cibersort not working; problem with gene names in reference/eset
+# deconvolute_results_ciber = deconvolute(t(normalized_data),
+#                                   method = "cibersort_abs",
+#                                   tumor = TRUE)
 
-#look at tumor purity in LN vs. primary samples
 
 ```
 
-     MCPcounter             EPIC        quanTIseq            xCell        CIBERSORT CIBERSORT (abs.)            TIMER     ConsensusTME             ABIS         ESTIMATE 
-   "mcp_counter"           "epic"      "quantiseq"          "xcell"      "cibersort"  "cibersort_abs"          "timer"  "consensus_tme"           "abis"       "estimate" 
-
+## Tidy into dataframes 
 ```{r}
 
-#Make a dataframe with overlapping cell types
-deconvolution_df = data.frame(t(deconvolute_results[11,]),
-                t(deconvolute_results_epic[8,]))
-deconvolution_df = deconvolution_df[-1,]
-colnames(deconvolution_df) = c("quantiseq", "epic")
+deconvolutions = list()
 
-#Compare deconvolution results 
-ggplot(deconvolution_df, aes(x = as.numeric(quantiseq), y = as.numeric(epic))) +
+#Epic
+deconvolutions$epic = as.data.frame(t(deconvolute_results_epic))
+colnames(deconvolutions$epic) = deconvolutions$epic[1,]
+deconvolutions$epic = deconvolutions$epic[2:nrow(deconvolutions$epic),]
+
+#Quantiseq
+deconvolutions$quantiseq = as.data.frame(t(deconvolute_results_quantiseq))
+colnames(deconvolutions$quantiseq) = deconvolutions$quantiseq[1,]
+deconvolutions$quantiseq = deconvolutions$quantiseq[2:nrow(deconvolutions$quantiseq),]
+
+#Estimate
+deconvolutions$estimate = as.data.frame(t(deconvolute_results_estimate))
+colnames(deconvolutions$estimate) = deconvolutions$estimate[1,]
+deconvolutions$estimate = deconvolutions$estimate[2:nrow(deconvolutions$estimate),]
+
+```
+
+
+# Consensus Tumor Purity
+```{r}
+
+#tumor purity dataframe
+tumor_purity = data.frame(sample = row.names(deconvolutions$epic),
+                          epic = as.numeric(deconvolutions$epic$`uncharacterized cell`),
+                          quantiseq = as.numeric(deconvolutions$quantiseq$`uncharacterized cell`),
+                          estimate = as.numeric(deconvolutions$estimate$`tumor purity`))
+
+#Add mean
+tumor_purity$methods_mean = rowMeans(tumor_purity[,2:4])
+
+#clean up
+rm(list = c("deconvolute_results_epic", "deconvolute_results_estimate", "deconvolute_results_quantiseq"))
+
+```
+
+## Plots comparing methods
+```{r}
+
+ggplot(tumor_purity, aes(x = epic, y = quantiseq)) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method= "lm")
 
+ggplot(tumor_purity, aes(x = epic, y = estimate)) +
+  geom_point() +
+  geom_smooth(method= "lm")
 
-deconvolution_epic_df = as.data.frame(t(deconvolute_results_epic))
-colnames(deconvolution_epic_df) = deconvolution_epic_df[1,]
-deconvolution_epic_df = deconvolution_epic_df[-1,]
+ggplot(tumor_purity, aes(x = estimate, y = quantiseq)) +
+  geom_point() +
+  geom_smooth(method= "lm")
 
-deconvolution_epic_df = deconvolution_epic_df |> 
-  merge(sample_metadata, by.x = "row.names", by.y = "sample_id")
+ggplot(tumor_purity, aes(x = methods_mean, y = epic)) +
+  geom_point() +
+  geom_smooth(method= "lm")
 
-ggplot(deconvolution_epic_df, aes(x = tissue_rollup, y = as.numeric(`T cell CD4+`), color = tissue_rollup)) +
+ggplot(tumor_purity, aes(x = methods_mean, y = quantiseq)) +
+  geom_point() +
+  geom_smooth(method= "lm")
+
+ggplot(tumor_purity, aes(x = methods_mean, y = estimate)) +
+  geom_point() +
+  geom_smooth(method= "lm")
+
+```
+
+## Add to sample metadata
+```{r}
+
+sample_metadata = merge(sample_metadata, tumor_purity[,c("sample", "methods_mean")], by.x = "sample_id", by.y = "sample")
+
+#Chamge column name
+# names(sample_metadata[,"methods_mean"]) = "tumor_purity"
+
+```
+
+## Plots
+```{r}
+
+#Site: Primary vs. Metastatic
+sample_metadata |> 
+  ggplot(aes(x = tumor_descriptor, y = methods_mean, color = tumor_descriptor)) +
+    geom_jitter(width = 0.2) +
+    stat_summary(fun = mean, geom = "crossbar", width = 0.3, linewidth = 0.3, color = "black") +
+    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, linewidth = 0.3, color = "black") +
+    theme(legend.position = "none")
+
+#By Stage
+ggplot(sample_metadata, aes(x = ajcc_pathologic_stage, y = methods_mean, color = ajcc_pathologic_stage)) +
   geom_jitter(width = 0.2) +
   stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
-  labs(x = "Tissue of origin", y = "CD4 Fraction", title = "EPIC Deconvolution") +
+  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
+  labs(x = "Stage", y = "Percent Tumor") +
   theme(legend.position = "none")
 
-deconvolution_epic_df |> 
-  mutate(CD4_Grouping = ifelse(`T cell CD4+` > median(`T cell CD4+`), "High", "Low")) |> 
-  ggsurvfit::survfit2(survival::Surv(last_event, survial_censor) ~ CD4_Grouping , data = _) |>
+#By tissue rollup
+ggplot(sample_metadata, aes(x = tissue_rollup, y = methods_mean, color = tissue_rollup)) +
+  geom_jitter(width = 0.2) +
+  stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
+  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
+  labs(x = "Tissue of origin", y = "Percent Tumor") +
+  theme(legend.position = "none")
+
+#Survival
+sample_metadata |> 
+  mutate(grouping = ifelse(methods_mean > median(methods_mean), "High", "Low")) |> 
+  ggsurvfit::survfit2(survival::Surv(last_event, survial_censor) ~ grouping , data = _) |>
   ggsurvfit::ggsurvfit() +
   ggsurvfit::add_risktable(risktable_stats = "n.risk") +
-  ggsurvfit::add_pvalue()
+  ggsurvfit::add_pvalue() +
+  ggtitle("Sample Percent Tumor")
+
+```
 
 
+# Epic Deconvolution
+
+## Add to sample metadata
+```{r}
+
+#Add epic deconvultion results to sample metadata
+sample_metadata = merge(sample_metadata, deconvolutions$epic, by = "row.names")
+#change columns to numeric
+sample_metadata[,69:76] = as.numeric(unlist(sample_metadata[,69:76]))
+
+```
+
+## Plotting functions
+```{r}
+
+#Survival
+survival_plot = function(cell_type) {
+  
+sample_metadata |> 
+  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  dplyr::select(cell_type, last_event, survial_censor) |> 
+  mutate(grouping = ifelse(.data[[cell_type]] > median(.data[[cell_type]]), "High", "Low")) |> 
+  ggsurvfit::survfit2(survival::Surv(last_event, survial_censor) ~ grouping, data = _) |>
+  ggsurvfit::ggsurvfit() +
+    ggsurvfit::add_risktable(risktable_stats = "n.risk") +
+    ggsurvfit::add_pvalue() +
+    ggtitle(cell_type)
+}
+
+
+#By Tissue Rollup
+tissue_rollup_plot = function(cell_type) {
+  
+sample_metadata |> 
+  ggplot(aes(x = tissue_rollup, y = .data[[cell_type]], color = tissue_rollup)) +
+    geom_jitter(width = 0.2) +
+    stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
+    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
+    labs(x = "Tissue of origin", y = cell_type, title = "Epic Deconvolution") +
+    theme(legend.position = "none")
+
+}
+
+
+#By Stage
+stage_plot = function(cell_type) {
+  
+  sample_metadata |> 
+  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  ggplot(aes(x = ajcc_pathologic_stage, y = .data[[cell_type]], color = ajcc_pathologic_stage)) +
+    geom_jitter(width = 0.2) +
+    stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
+    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
+    labs(x = "Stage", y = cell_type, title = "Epic Deconvolution") +
+    theme(legend.position = "none")
+
+}
+
+
+```
+
+## Plots
+```{r}
+
+deconvolutions_to_plot = colnames(sample_metadata[69:76])
+
+#survival
+lapply(deconvolutions_to_plot, survival_plot)
+
+#tissue roll up plots
+lapply(deconvolutions_to_plot, tissue_rollup_plot)
+
+#stage plots
+lapply(deconvolutions_to_plot, stage_plot)
+
+```
+
+
+## Primary vs. metastatic statistics
+```{r}
+
+#dataframe of statistics comparing cell types between primary and metastatic samples; filtered on only cutaneous samples
+deconvolution_stats = sample_metadata |> 
+  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  dplyr::select(decovolutions_to_plot, tumor_descriptor) |> 
+  mutate_at(decovolutions_to_plot, as.numeric) |> 
+  tidyr::pivot_longer(cols = decovolutions_to_plot, names_to = "Cell_Type", values_to = "Value") |> 
+  mutate(Cell_Type = as.factor(Cell_Type)) |> 
+  group_by(Cell_Type) |> 
+  rstatix::t_test(Value ~ tumor_descriptor) |> 
+  rstatix::adjust_pvalue(method = "BH")
+
+
+```
+### Plotting function
+```{r}
+
+#Plotting function
+decon_plot = function(cell_type){
+    sample_metadata |> 
+      dplyr::filter(tissue_rollup == "Cutanous") |> 
+      ggplot(aes(x = tumor_descriptor, y = .data[[cell_type]], color = tumor_descriptor)) +
+        geom_jitter(width = 0.2) +
+        stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
+        stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black")
+}
+
+```
+
+
+### Plots
+```{r}
+ 
+lapply(deconvolutions_to_plot, decon_plot)
 
 ```
 
