@@ -263,6 +263,7 @@ plot_survival = function(module_name){
 
 
 ```
+
 ## Plots
 ```{r}
 
