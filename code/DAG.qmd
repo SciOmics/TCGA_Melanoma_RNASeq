@@ -20,18 +20,28 @@ dagify("Survival" ~ "EMT_Score") |>
 
 ```{r}
 
-survival_dag = dagify(Survival ~ EMT_Score,
-                      EMT_Score ~ Disease_Stage,
-                      Survival ~ Disease_Stage + Age,
+survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infiltrate + Sample_Collection_Year + Treatment + Sex,
+                      EMT_Score ~ Disease_Stage + Tumor_Purity + Tissue_Rollup,
+                      Treatment ~ Disease_Stage,
+                      Immune_Infiltrate ~ Tissue_Rollup,
                       labels = c("Survival" = "Survival",
                                  "EMT_Score" = "EMT Score",
                                  "Disease_Stage" = "Disease Stage",
-                                 "Age" = "Age"),
+                                 "Age" = "Patient Age",
+                                 "Tumor_Purity" = "Sample Tumor \nComposition",
+                                 "Tissue_Rollup" = "Sample Tissue \nSource",
+                                 "Immune_Infiltrate" = "Immune Infiltrate",
+                                 "Sample_Collection_Year" = "Year Sample \nCollected",
+                                 "Treatment" = "Treatment(s) \nReceived",
+                                 "Sex" = "Patient \nSex"),
                       exposure = "EMT_Score",
                       outcome = "Survival")
 
+# png(file = "../outputs/DAG.png", bg = "white")
 ggdag(survival_dag, text = FALSE, use_labels = "label") +
     theme_dag()
+# dev.off()
+
 
 #Survival
 #EMT Score
@@ -39,6 +49,9 @@ ggdag(survival_dag, text = FALSE, use_labels = "label") +
 #Age
 #Tumor purity
 #Tissue
+#Primary vs Met
+#Immune infiltrate
+#Patient Sex
 
 
 ```
