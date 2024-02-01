@@ -22,8 +22,9 @@ dagify("Survival" ~ "EMT_Score") |>
 
 survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infiltrate + Sample_Collection_Year + Treatment + Sex,
                       EMT_Score ~ Disease_Stage + Tumor_Purity + Tissue_Rollup,
-                      Treatment ~ Disease_Stage,
+                      Treatment ~ Disease_Stage + Sample_Collection_Year,
                       Immune_Infiltrate ~ Tissue_Rollup,
+                      Tumor_Purity ~ Tissue_Rollup,
                       labels = c("Survival" = "Survival",
                                  "EMT_Score" = "EMT Score",
                                  "Disease_Stage" = "Disease Stage",
@@ -53,6 +54,33 @@ ggdag(survival_dag, text = FALSE, use_labels = "label") +
 #Immune infiltrate
 #Patient Sex
 
+
+```
+#Save DAG Image
+```{r}
+
+png(file = "../outputs/DAG.png", bg = "white")
+ggdag(survival_dag, text = FALSE, use_labels = "label") +
+    theme_dag()
+dev.off()
+
+```
+
+
+```{r}
+
+#Backdoor paths
+ggdag_paths(survival_dag,
+            from = "EMT_Score",
+            to = "Survival") 
+
+#Adjustment sets
+ggdag_adjustment_set(survival_dag,
+                     exposure = c("EMT_Score"),
+                     outcome = "Survival",
+                     text = FALSE,
+                     use_labels = "label") +
+  theme_dag_blank()
 
 ```
 
