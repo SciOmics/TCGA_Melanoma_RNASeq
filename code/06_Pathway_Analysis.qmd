@@ -10,6 +10,16 @@ library(clusterProfiler)
 
 ```
 
+# Load Data
+```{r}
+
+source("functions/Load_Normalized_Expression.R")
+normalized_data = load_normalized_expression("../outputs/normalized_expression.csv")
+rm(load_normalized_expression)
+
+```
+
+
 
 # DEG Enrichment Pathway Analysis
 ```{r}

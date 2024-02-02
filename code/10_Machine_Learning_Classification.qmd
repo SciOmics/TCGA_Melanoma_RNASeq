@@ -3,5 +3,20 @@ title: "Machine Learning"
 format: html
 ---
 
+# Load data
+```{r}
+
+#normalized expression data
+source("functions/Load_Normalized_Expression.R")
+normalized_data = load_normalized_expression("../outputs/normalized_expression.csv")
+rm(load_normalized_expression)
+
+#sample metadata
+source("functions/Load_Sample_Metadata.R")
+sample_metadata1 = load_sample_metadata("../data/sample_metadata.csv")
+rm(load_sample_metadata)
+
+```
+
 # Logistic regression to distinguish primary vs mets by deconvolution
 # Regularized regression to predict percent tumor purity by gene expression (WGCNA modules?)

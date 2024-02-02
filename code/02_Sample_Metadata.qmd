@@ -64,10 +64,48 @@ rm(Tissue_Terms)
 
 ```
 
+# Cleaning up Sample Metadata
+
+## Investigating Columns
+```{r}
+
+#Which columns of the sample metadata are lists
+str(sample_metadata[2,]) 
+
+list_columns = c("treatments", "primary_site", "disease_type")
+
+unique(sample_metadata[,"primary_site"])
+unique(sample_metadata[,"disease_type"])
+#primary_site and disease_type have only one value since this is a melanoma data set
+#treatment column has generic information not of use
+
+exclude_columns = c("barcode", "sample_submitter_id", "composition", "state", "pathology_report_uuid", "submitter_id", "oct_embedded",
+                    "specimen_type", "is_ffpe", "tissue_type", "synchronous_malignancy", "days_to_diagnosis", "last_known_disease_status",
+                    "classification_of_tumor", "diagnosis_id", "icd_10_code", "tumor_grade", "progression_or_recurrence", "alcohol_history",
+                    "exposure_id", "demographic_id", "bcr_patient_barcode", "project_id", "name", "releasable", "released")
+
+```
+
+## Remove Columns of no use
+```{r}
+
+sample_metadata = sample_metadata |> 
+    #remove list columns
+    dplyr::select(!list_columns) |> 
+    #remove other columns
+    dplyr::select(!exclude_columns)
+
+#clean up
+rm(list = c("list_columns", "exclude_columns"))
+
+```
+
 # Save
 ```{r}
 
-saveRDS(sample_metadata, file = "../data/sample_metadata.rds")
+write.csv(sample_metadata, file = "../data/sample_metadata.csv")
 
 ```
+
+
 

@@ -21,13 +21,14 @@ theme_set(theme_classic())
 ```{r}
 
 #normalized expression data
-normalized_data = as.data.frame(fread("../outputs/normalized_expression.csv"))
-rownames(normalized_data) = normalized_data$V1
-normalized_data = normalized_data[,2:ncol(normalized_data)]
+source("functions/Load_Normalized_Expression.R")
+normalized_data = load_normalized_expression("../outputs/normalized_expression.csv")
+rm(load_normalized_expression)
 
 #sample metadata
-sample_metadata = readRDS("../data/sample_metadata.rds")
-rownames(sample_metadata) = sample_metadata$sample_id
+source("functions/Load_Sample_Metadata.R")
+sample_metadata1 = load_sample_metadata("../data/sample_metadata.csv")
+rm(load_sample_metadata)
 
 ```
 
