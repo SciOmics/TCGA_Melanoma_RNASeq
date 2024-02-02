@@ -24,7 +24,7 @@ survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infilt
                       EMT_Score ~ Disease_Stage + Tumor_Purity + Tissue_Rollup,
                       Treatment ~ Disease_Stage + Sample_Collection_Year,
                       Immune_Infiltrate ~ Tissue_Rollup,
-                      Tumor_Purity ~ Tissue_Rollup,
+                      Tumor_Purity ~ Tissue_Rollup + Immune_Infiltrate,
                       labels = c("Survival" = "Survival",
                                  "EMT_Score" = "EMT Score",
                                  "Disease_Stage" = "Disease Stage",
