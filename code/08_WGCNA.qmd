@@ -16,6 +16,7 @@ library(ggsurvfit)
 library(tidygraph)
 library(ggraph)
 library(data.table)
+library(parallel)
 
 ggplot2::theme_set(ggplot2::theme_classic())
 
@@ -34,8 +35,11 @@ rm(load_normalized_expression)
 
 #sample metadata
 source("functions/Load_Sample_Metadata.R")
-sample_metadata1 = load_sample_metadata("../data/sample_metadata.csv")
+sample_metadata = load_sample_metadata("../data/sample_metadata.csv")
 rm(load_sample_metadata)
+
+#Previously computed WGCNA modules
+modules = readRDS("../outputs/wgcna_object.rds")
 
 ```
 
@@ -130,14 +134,6 @@ plotDendroAndColors(modules$dendrograms[[1]], colors = modules$colors, dendroLab
 ```
 
 
-# Load WGCNA Object
-```{r}
-
-modules = readRDS("../outputs/wgcna_object.rds")
-
-```
-
-
 # Data frame of genes in modules 
 ```{r}
 
@@ -172,7 +168,9 @@ annotated_me = annotated_me[,c(-1)]
 
 ```
 
-## Heatmap
+## Heatmaps
+
+### Modules vs Samples
 ```{r}
 
 #Modules vs Samples
@@ -192,151 +190,114 @@ heatmap(as.matrix(t(MEblack_genes[,3:ncol(MEblack_genes)])),
         labRow = rownames(t(MEblack_genes)),
         labCol = MEblack_genes$tumor_descriptor)
 
-```
+#Function
 
-# Comparing modules between primary and metastatic samples
-```{r}
+module_gene_heatmap = function(module){
+  
+  temp = module_genes |> 
+  dplyr::filter(Module == module) 
 
-#Primary vs Mets
-module_stats = annotated_me |> 
-  dplyr::select(starts_with("ME"), tumor_descriptor) |> 
-  tidyr::pivot_longer(cols = contains("ME"), names_to = "Module", values_to = "Value") |> 
-  group_by(Module) |> 
-  t_test(Value ~ tumor_descriptor) |> 
-  adjust_pvalue(method = "BH")
+  temp = normalized_data[,colnames(normalized_data) %in% temp$ENSEMBL]
+  temp = merge(dplyr::select(annotated_me, tumor_descriptor), temp, by = "row.names")
 
-#Survival
-survival_stats_function = function(module){
-annotated_me |>
-  dplyr::select(starts_with("ME"), last_event, survial_censor) |>
-  tidyr::pivot_longer(cols = contains("ME"), names_to = "Module", values_to = "Value") |>
-  dplyr::filter(Module == module) |>
-  mutate(ME_division = ifelse(Value > median(Value), "high", "low")) |>
-  survival::coxph((Surv(last_event, survial_censor) ~ ME_division), data = _) |> 
-  summary()
+  heatmap(as.matrix(t(temp[,3:ncol(temp)])),
+        labRow = rownames(t(temp)),
+        labCol = temp$tumor_descriptor)
 }
 
-survival_stats = lapply(module_names, survival_stats_function)
-names(survival_stats) = module_names
-
-#extract p-values
-#NOT WORKING CURRENTLY
-# for(i in 1:length(survival_stats)) {
-#   temp = survival_stats[i]
-#   print(temp[logtest])
-#   # temp = temp$logtest[3]
-#   # print(temp)
-# }
-# 
-# 
-# survival_stats$MEgrey$logtest[3]
+module_gene_heatmap("black")
 
 ```
 
-## Plotting functions
+### Genes in Modules
+
+#### Function
 ```{r}
 
-#Primary vs. Mets
-plot_modules = function(module_name){
+module_gene_heatmap = function(module){
   
-  annotated_me |>
-    dplyr::filter(tissue_rollup == "Cutanous") |>
-    ggplot(aes(x = tumor_descriptor, y = .data[[module_name]], color = tumor_descriptor)) +
-      geom_jitter(width = 0.2) +
-      stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
-      stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
-      theme(legend.position = "none")
-  
+  temp = module_genes |> 
+  dplyr::filter(Module == module) 
+
+  temp = normalized_data[,colnames(normalized_data) %in% temp$ENSEMBL]
+  temp = merge(dplyr::select(annotated_me, tumor_descriptor), temp, by = "row.names")
+
+  heatmap(as.matrix(t(temp[,3:ncol(temp)])),
+        labRow = rownames(t(temp)),
+        labCol = temp$tumor_descriptor,
+        main = module)
 }
 
-#Survival
-plot_survival = function(module_name){
-  
-  annotated_me |>
-    dplyr::filter(tissue_rollup == "Cutanous") |> 
-    mutate(group = ifelse(.data[[module_name]] > median(.data[[module_name]]), "high", "low")) |> 
-    survfit2(Surv(last_event, survial_censor) ~ group , data = _) |>
-    ggsurvfit() +
-      add_risktable(risktable_stats = "n.risk") +
-      add_pvalue() +
-      ggtitle(module_name)
+```
 
-}
 
+#### Plots
+```{r}
+
+lapply(unique(module_genes$Module), module_gene_heatmap)
+
+```
+# Hub genes
+```{r}
+#Get hub genes
+hub_genes = chooseTopHubInEachModule(normalized_data,
+                         colorh = modules$colors) 
+
+#Get connectivity
+connectivity_df = intramodularConnectivity.fromExpr(normalized_data, 
+                                  colors = modules$colors,
+                                  networkType = "signed")
+#add row names
+rownames(connectivity_df) = colnames(normalized_data)
+#merge with module gene info
+module_genes = merge(module_genes, connectivity_df, by = "row.names")
+rownames(module_genes) = module_genes$Row.names
+module_genes = module_genes[,-1]
+#clean up
+rm(connectivity_df)
 
 ```
 
 ## Plots
 ```{r}
+ 
+#Plotting function
+module_gene_correlation_plot = function(module, gene) {
+  normalized_data |> 
+  merge(annotated_me, by = "row.names") |> 
+  ggplot(aes(x = .data[[module]], y = .data[[gene]])) +
+    geom_point() +
+    geom_smooth(method = "lm")
+}
 
-module_names = colnames(annotated_me[1:17])
-
-#Primary vs mets
-lapply(module_names, plot_modules)
-
-#Survival
-lapply(module_names, plot_survival)
-
+#Test
+module_gene_correlation_plot("ENSG00000178363", "MEblack")
 
 ```
 
-
-## Survival Models
+# Module pathway analysis
 ```{r}
 
-#Compare regression models with more/less modules
-survival_models = list()
+#Function for assessing enrichment in module
+module_enrichment = function(module) {
+  module_genes |> 
+  filter(Module == module) |> 
+  pull(ncbi) |> 
+  na.omit() |> 
+  enrichGO(OrgDb = org.Hs.eg.db::org.Hs.eg.db,
+           ont = "ALL") |> 
+  dotplot() + ggtitle(module)
+}
 
-survival_models$full_model = survival::coxph(Surv(last_event, survial_censor) ~ MEblack + MEyellow + MEmagenta + MEpurple + MEgreenyellow + MEbrown
-                , data = annotated_me)
-
-survival_models$intercept_only = survival::coxph(Surv(last_event, survial_censor) ~ 1
-                , data = annotated_me)
-
-survival_models$one_variable = survival::coxph(Surv(last_event, survial_censor) ~ MEblack
-                , data = annotated_me)
-
-survival_models$two_variable = survival::coxph(Surv(last_event, survial_censor) ~ MEblack + MEyellow,
-                                             data = annotated_me)
-
-survival_models$two_variable2 = survival::coxph(Surv(last_event, survial_censor) ~ MEblack + MEmagenta,
-                                             data = annotated_me)
-
-survival_models$two_variable_interaction = survival::coxph(Surv(last_event, survial_censor) ~ (MEblack + MEyellow)^2,
-                                             data = annotated_me)
-
-survival_models$three_variable = survival::coxph(Surv(last_event, survial_censor) ~ MEblack + MEyellow + MEmagenta,
-                                             data = annotated_me)
-
-survival_models$three_variable_interaction = survival::coxph(Surv(last_event, survial_censor) ~ (MEblack + MEyellow + MEmagenta)^2,
-                                             data = annotated_me)
-
-extractAIC(survival_models$intercept_only)
-extractAIC(survival_models$full_model)
-extractAIC(survival_models$one_variable)
-extractAIC(survival_models$two_variable)
-extractAIC(survival_models$two_variable2)
-extractAIC(survival_models$two_variable_interaction)
-extractAIC(survival_models$three_variable)
-extractAIC(survival_models$three_variable_interaction)
-
-BIC(survival_models$intercept_only)
-BIC(survival_models$full_model)
-BIC(survival_models$one_variable)
-BIC(survival_models$two_variable)
-BIC(survival_models$two_variable2)
-BIC(survival_models$two_variable_interaction)
-BIC(survival_models$three_variable)
-BIC(survival_models$three_variable_interaction)
-
-#AICcmodavg::bictab()
+#Assess all modules
+parallel::mclapply(unique(module_genes$Module), 
+                   module_enrichment, 
+                   mc.cores = 54)
 
 ```
-
 
 # Network plots
 
-## Genes
 ```{r}
 
 in_module_genes = module_genes |> 
@@ -361,78 +322,189 @@ gene_correlations_graph = gene_correlations_graph |>
   mutate(degree = centrality_degree(weights = weight))
 
 gene_correlations_graph |> 
-  filter(degree > 4) |> 
+  #filter(degree > 4) |> 
   ggraph::ggraph(layout = "fr") +
     geom_edge_link() +
-    geom_node_point(aes(color = Module)) +
-    scale_color_manual(values = c("darkgrey", "blue", "brown", "cyan", "green", "greenyellow", "lightcyan",
-                                  "magenta", "midnightblue", "pink", "purple", "red", "salmon", "tan", "turquoise",
-                                  "yellow"))
+    geom_node_point(aes(color = Module)) 
 
+```
+## Plotting function
+```{r}
 
+network_plot = function(module) { 
+  
+  in_module_genes = module_genes |> 
+    dplyr::filter(Module == module) |> 
+    pull(ENSEMBL)
 
-gene_correlations_graph |> 
-  ggraph::ggraph() +
-  geom_edge_link() + 
-  geom_node_point()
+  normalized_data_filtered = normalized_data |> 
+    dplyr::select(in_module_genes)
+
+  rm(in_module_genes)
+
+  gene_correlations = WGCNA::cor(as.matrix(normalized_data_filtered))
+  gene_correlations[abs(gene_correlations) < 0.65] = 0
+  gene_correlations[abs(gene_correlations) > 0.65] = 1
+  gene_correlations_graph = as_tbl_graph(gene_correlations)
+
+  gene_correlations_graph = gene_correlations_graph |> 
+    activate(nodes) |> 
+    mutate(ENSEMBL = name) |> 
+    left_join(module_genes, by = "ENSEMBL") |> 
+    mutate(degree = centrality_degree(weights = weight))
+
+  gene_correlations_graph |> 
+    ggraph::ggraph(layout = "fr") +
+      geom_edge_link() +
+      geom_node_point(aes(color = Module)) 
+
+}
+
+network_plot("yellow")
 
 ```
 
 
-##
+# Comparing modules between primary and metastatic samples
+
+## Statistics
+```{r}
+
+#Primary vs Mets
+module_stats = annotated_me |> 
+  dplyr::select(starts_with("ME"), tumor_descriptor) |> 
+  tidyr::pivot_longer(cols = contains("ME"), names_to = "Module", values_to = "Value") |> 
+  group_by(Module) |> 
+  t_test(Value ~ tumor_descriptor) |> 
+  adjust_pvalue(method = "BH")
+
+
+```
+
+## Plotting function
+```{r}
+
+#Primary vs. Mets
+plot_modules = function(module_name){
+  
+  annotated_me |>
+    dplyr::filter(tissue_rollup == "Cutanous") |>
+    ggplot(aes(x = tumor_descriptor, y = .data[[module_name]], color = tumor_descriptor)) +
+      geom_jitter(width = 0.2) +
+      stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
+      stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
+      theme(legend.position = "none")
+  
+}
+
+```
+
+## Plots
+```{r}
+
+#Primary vs mets
+lapply(module_names, plot_modules)
+
+```
+#Survival Analysis
+
+## Statistics
+```{r}
+
+#Survival
+survival_stats_function = function(module){
+annotated_me |>
+  dplyr::select(starts_with("ME"), last_event, survial_censor) |>
+  tidyr::pivot_longer(cols = contains("ME"), names_to = "Module", values_to = "Value") |>
+  dplyr::filter(Module == module) |>
+  mutate(ME_division = ifelse(Value > median(Value), "high", "low")) |>
+  survival::coxph((Surv(last_event, survial_censor) ~ ME_division), data = _) |> 
+  summary()
+}
+
+module_names = colnames(annotated_me[1:17])
+survival_stats = lapply(module_names, survival_stats_function)
+names(survival_stats) = module_names
+
+#extract p-values
+#NOT WORKING CURRENTLY
+# for(i in 1:length(survival_stats)) {
+#   temp = survival_stats[i]
+#   print(temp[logtest])
+#   # temp = temp$logtest[3]
+#   # print(temp)
+# }
+# 
+# 
+# survival_stats$MEgrey$logtest[3]
+
+```
+
+## Plotting function
 ```{r}
 
 
+#Survival
+plot_survival = function(module_name){
+  
+  annotated_me |>
+    dplyr::filter(tissue_rollup == "Cutanous") |> 
+    mutate(group = ifelse(.data[[module_name]] > median(.data[[module_name]]), "high", "low")) |> 
+    survfit2(Surv(last_event, survial_censor) ~ group , data = _) |>
+    ggsurvfit() +
+      add_risktable(risktable_stats = "n.risk") +
+      add_pvalue() +
+      ggtitle(module_name)
+
+}
 
 ```
 
-
-## Samples
+## Plots
 ```{r}
 
-
+#Survival
+#lapply(module_names, plot_survival)
+parallel::mclapply(module_names, 
+                   plot_survival, 
+                   mc.cores = 54)
 
 ```
 
-# Hub genes
+
+## Mutivariable Models
 ```{r}
 
-hub_genes = chooseTopHubInEachModule(normalized_data,
-                         colorh = modules$colors) 
+survival_models = list()
 
-View(as.data.frame(hub_genes))
-
-connectivity_df = intramodularConnectivity.fromExpr(normalized_data, 
-                                  colors = modules$colors,
-                                  networkType = "signed")
-
-rownames(connectivity_df) = colnames(normalized_data)
-
-```
+#Module with only intercept
+survival_models$intercept_only = survival::coxph(Surv(last_event, survial_censor) ~ 1, data = annotated_me)
 
 
-# Module Membership (gene correlation with module eigen value)
-```{r}
+#Model with all modules
+survival_models$full_model = survival::coxph(Surv(last_event, survial_censor) ~ MEblue + MEturquoise + MEyellow + MEgreen + MEmagenta + MEbrown + MEsalmon + MElightcyan + MEblack + MEgreenyellow + MEred + MEmidnightblue + MEtan + MEcyan + MEpink + MEpurple + MEgrey, data = annotated_me)
+
+#Stepwise variable selection
+StepReg::stepwiseCox(Surv(last_event, survial_censor) ~  MEblue + MEturquoise + MEyellow + MEgreen + MEmagenta + MEbrown + MEsalmon + MElightcyan + MEblack + MEgreenyellow + MEred + MEmidnightblue + MEtan + MEcyan + MEpink + MEpurple + MEgrey, 
+                     data = annotated_me, 
+                     selection = "score",
+                     select = "AIC")
+
+#Best model
+survival_models$optimized_model = survival::coxph(Surv(last_event, survial_censor) ~ MEyellow + MEgreen + MEmagenta + MEsalmon + MEblack + MEcyan, data = annotated_me)
 
 
+#AIC values
+extractAIC(survival_models$intercept_only)
+extractAIC(survival_models$full_model)
+extractAIC(survival_models$optimized_model)
 
-```
-
-
-# Module pathway analysis
-```{r}
-
-enrich_results = module_genes |> 
-  filter(Module == "black") |> 
-  pull(ncbi) |> 
-  na.omit() |> 
-  enrichKEGG()
-
-dotplot(enrich_results,
-        showCategory = 20)
+#BIC values
+BIC(survival_models$intercept_only)
+BIC(survival_models$full_model)
+BIC(survival_models$optimized_model)
 
 ```
-
 # Cell signature enrichment in modules
 
 ## Retreive cell signatures
@@ -450,22 +522,6 @@ cell_signatures = readxl::read_excel("../references/Cell_type_Signatures.xlsx")
 ```{r}
 
 enricher()
-
-```
-
-
-```{r}
-
-# adjacency_matrix = adjacency(normalized_data_filtered)
-# 
-# TOM = TOMsimilarityFromExpr(normalized_data_filtered,
-#                             power = 6,
-#                             networkType = "signed",
-#                             TOMType = "signed")
-# rownames(TOM) = colnames(normalized_data)
-# colnames(TOM) = colnames(normalized_data)
-# 
-# TOM_graph = as_tbl_graph(TOM)
 
 ```
 
