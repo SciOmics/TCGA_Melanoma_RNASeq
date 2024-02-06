@@ -4,4 +4,4 @@
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/yellow_module_survival.png)
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/yellow_module_survival.png)
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/module_deconvolution_correlations.png)
