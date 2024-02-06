@@ -17,6 +17,7 @@ library(tidygraph)
 library(ggraph)
 library(data.table)
 library(parallel)
+library(corrplot)
 
 ggplot2::theme_set(ggplot2::theme_classic())
 
@@ -588,17 +589,54 @@ enricher_results_df_pval[,2:14] = 1 - enricher_results_df_pval[,2:14]
 enricher_results_df_pval[is.na(enricher_results_df_pval)] = 0
 
 
-png(filename = "../outputs/cell_types_in_WGCNA_modules.png")
+#png(filename = "../outputs/cell_types_in_WGCNA_modules.png")
 heatmap(as.matrix(enricher_results_df_pval[,2:14]),
         labRow = enricher_results_df_pval$ID,
         scale = "none",
         Rowv = NA,
         Colv = NA,
         main = "Cell Signature Enrichment in WGCNA Modules")
-dev.off()
+#dev.off()
 
 #need a legend
 
+
+```
+
+#Correlate deconvolutions with module eigen values 
+```{r}
+
+#add deconvolution data to data frame
+module_cell_type_df = merge(annotated_me, deconvolutions$epic, by = "row.names")
+
+module_cell_type_df = module_cell_type_df |> 
+  select(starts_with("ME"), 55:62) |> 
+  mutate_if(is.character, as.numeric)
+
+ggplot(module_cell_type_df, aes(x = MEyellow, y = `T cell CD4+`)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+#correlations 
+module_cell_type_correlations = cor(module_cell_type_df)
+
+corrplot(module_cell_type_correlations, type="upper", order="hclust")
+#
+#Reformat data for ggplot
+module_cell_type_correlations_long = module_cell_type_correlations |>
+  as.data.frame() |> 
+  mutate(module_name = row.names(module_cell_type_correlations)) |> 
+  tidyr::pivot_longer(cols = 1:25) |> 
+  dplyr::filter(!(name %in% module_names)) |> 
+  dplyr::filter(module_name %in% module_names)
+
+#png(file = "../outputs/module_deconvolution_correlations.png", width = 800, height = 480)
+ggplot(module_cell_type_correlations_long, aes(x = module_name, y = name, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low="blue", mid = "white", high="red") +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(x = "WGCNA Module", y = "Epic Deconvolution Cell Type", title = "Correlations: Module Eigen Values & Cell Type Frequencies")
+#dev.off()
 
 ```
 
