@@ -2,7 +2,10 @@ This repo is to demo analysis approaches for bulk RNA-seq data.
 
 **Under Construction**
 
+
+
 ![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/DAG.png?raw=true)
+**Directed acyclic graph of hypothesized variables impacting patient overall survival**
 
 Factors that are hypothesized to impact survival:
 
@@ -10,12 +13,12 @@ Factors that are hypothesized to impact survival:
 
 -Immune Infiltrate: as these data are from bulk RNA-seq, we'll need to use deconvolution techniques to get estimates of frequencies of immune infiltrate. Alternatively, we could use cell signature scoring methods (e.g. xCell). 
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/cell_types_in_WGCNA_modules.png?raw=true)
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/cell_types_in_WGCNA_modules.png?raw=true)\n
 **Enrichment for cell type gene signatures  in WGCNA modules**
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/module_deconvolution_correlations.png)
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/module_deconvolution_correlations.png)\n
 **Correlations between deconvolution cell frequencies and WGCNA module eigen values.**
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/yellow_module_survival.png)
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/yellow_module_survival.png)\n
 **Unadjusted survival curves for WGCNA yellow module eigen values.**
 
