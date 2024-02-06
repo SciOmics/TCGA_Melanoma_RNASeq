@@ -484,7 +484,7 @@ survival_models$intercept_only = survival::coxph(Surv(last_event, survial_censor
 #Model with all modules
 survival_models$full_model = survival::coxph(Surv(last_event, survial_censor) ~ MEblue + MEturquoise + MEyellow + MEgreen + MEmagenta + MEbrown + MEsalmon + MElightcyan + MEblack + MEgreenyellow + MEred + MEmidnightblue + MEtan + MEcyan + MEpink + MEpurple + MEgrey, data = annotated_me)
 
-#Stepwise variable selection
+#Step-wise variable selection
 StepReg::stepwiseCox(Surv(last_event, survial_censor) ~  MEblue + MEturquoise + MEyellow + MEgreen + MEmagenta + MEbrown + MEsalmon + MElightcyan + MEblack + MEgreenyellow + MEred + MEmidnightblue + MEtan + MEcyan + MEpink + MEpurple + MEgrey, 
                      data = annotated_me, 
                      selection = "score",
@@ -513,15 +513,53 @@ BIC(survival_models$optimized_model)
 cell_signatures = as.list(readxl::read_excel("../references/Cell_type_Signatures.xlsx"))
 cell_signatures = lapply(cell_signatures, function(x) x[!is.na(x)])
 
-cell_signatures = readxl::read_excel("../references/Cell_type_Signatures.xlsx")
+```
+
+
+## Data frame of module genes
+```{r}
+
+#Make a data frame of custom enricher terms for modules
+enricher_modules = module_genes |> 
+  dplyr::select(Module, Symbol)
+#rename columns
+colnames(enricher_modules) = c("TermID", "geneID")
 
 
 ```
 
 
+## Function
 ```{r}
 
-enricher()
+#Function
+module_enrichment = function(signature) {
+  enricher(gene = cell_signatures[[signature]],
+           TERM2GENE = enricher_modules,
+           maxGSSize = 100000)
+}
+
+
+```
+
+
+## Cell Signature Enrichments
+```{r}
+
+
+enricher_results = lapply(names(cell_signatures), module_enrichment)
+names(enricher_results) = names(cell_signatures)
+
+
+```
+
+
+## Plots
+```{r}
+
+
+
+
 
 ```
 
