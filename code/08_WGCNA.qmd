@@ -666,6 +666,64 @@ ggplot(module_cell_type_correlations_long, aes(x = module_name, y = name, fill =
 # EMT signature enrichment
 ```{r}
 
+##CLEAN THIS UP##
+
+#Function
+module_enrichment = function(signature) {
+  enricher(gene = signatures[[signature]],
+           TERM2GENE = enricher_modules,
+           maxGSSize = 100000)
+}
+
+enricher_results = lapply(names(signatures), module_enrichment)
+#add names to results list
+names(enricher_results) = names(signatures)
+
+
+
+
+
+
+enricher_results_df = data.frame()
+
+for(signature in names(enricher_results)){
+  temp = enricher_results[[signature]]@result
+  temp[["Signature"]] = signature
+  enricher_results_df = rbind(enricher_results_df, temp)
+}
+
+
+enricher_results_df_pval = enricher_results_df |> 
+  tidyr::pivot_wider(names_from = Signature, values_from = p.adjust, id_cols = ID)
+
+rownames(enricher_results_df_pval) = enricher_results_df_pval$ID
+
+enricher_results_df_pval[,2:7] = 1 - enricher_results_df_pval[,2:7]
+#need to invert p-values
+
+enricher_results_df_pval[is.na(enricher_results_df_pval)] = 0
+
+
+#png(filename = "../outputs/cell_types_in_WGCNA_modules.png")
+heatmap(as.matrix(enricher_results_df_pval[,2:7]),
+        labRow = enricher_results_df_pval$ID,
+        scale = "none",
+        Rowv = NA,
+        Colv = NA,
+        main = "Epi/Mes Enrichment in WGCNA Modules")
+#dev.off()
+
+#need a legend
+
+##CORRELATIONS##
+
+```
+
+
+
+#XCell
+```{r}
+
 
 
 ```
