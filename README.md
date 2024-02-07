@@ -4,7 +4,7 @@ This repo is to demo analysis approaches for bulk RNA-seq data.
 \
 
 \
-![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/DAG.png?raw=true)
+![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/DAG.png?raw=true)\
 **Directed acyclic graph of hypothesized variables impacting patient overall survival**
 \
 \
