@@ -13,6 +13,7 @@ library(singscore)
 library(survival)
 library(ggsurvfit)
 library(mclust)
+library(AnnotationDbi)
 
 ggplot2::theme_set(ggplot2::theme_classic())
 
@@ -25,6 +26,18 @@ ggplot2::theme_set(ggplot2::theme_classic())
 source("functions/Load_Normalized_Expression.R")
 normalized_data = load_normalized_expression("../outputs/normalized_expression.csv")
 rm(load_normalized_expression)
+
+```
+
+
+# Color palette
+```{r}
+
+palette_discrete = wesanderson::wes_palette("Darjeeling1", 5, type = "discrete")
+wesanderson::wes_palette("Darjeeling1", 5, type = "discrete")
+
+palette_continuous = wesanderson::wes_palette("Zissou1", 100, type = "continuous")
+wesanderson::wes_palette("Zissou1", 100, type = "continuous")
 
 ```
 
@@ -72,7 +85,7 @@ signatures = signatures[-c(1,2)]
 ```{r}
 
 #Change column names of normalized data from ensembl ids to gene symbols
-colnames(normalized_data) = mapIds(org.Hs.eg.db,
+colnames(normalized_data) = mapIds(org.Hs.eg.db::org.Hs.eg.db,
                                     keys = colnames(normalized_data),
                                     keytype = "ENSEMBL",
                                     column = "SYMBOL")
@@ -126,6 +139,13 @@ ggplot(gsva_results, aes(x = signatures_epi_overlap, y = signatures_mes_overlap,
 ```
 
 Plot survival by scores; try a combined score of epi - mes
+```{r}
+
+
+
+
+```
+
 
 # ssGSEA
 ```{r}
@@ -205,6 +225,7 @@ ssgsea_results |>
 ssgsea_results |> 
   dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
   coxph(Surv(last_event, survial_censor) ~ patient_mes_gmm_group + as.integer(stage) + year_of_diagnosis, data = _)
+###NEED TO FIX###
 
 
 ```

@@ -518,6 +518,28 @@ BIC(survival_models$full_model)
 BIC(survival_models$optimized_model)
 
 ```
+
+## Yellow Module with Adjustments
+```{r}
+
+#change ajcc_pathological_stage into an ordered factor
+annotated_me$ajcc_pathologic_stage = factor(annotated_me$ajcc_pathologic_stage, levels = c("Stage 0", "Stage I", "Stage IA", "Stage IB", "Stage II", "Stage IIA", "Stage IIB", "Stage IIC", "Stage III", "Stage IIIA", "Stage IIIB", "Stage IIIC", "Stage IV"))
+
+#Make an age at diagnosis column; year_of_diagnosis - year_of_birth 
+annotated_me = annotated_me |> 
+  mutate(age_at_diagnosis_years = year_of_diagnosis - year_of_birth)
+
+#add in epi/mes score
+annotated_me = annotated_me |> 
+  merge(dplyr::select(ss_patient_signature, TotalScore, Row.names), by.x = "row.names", by.y = "Row.names")
+
+#Adjusted survival model
+survival::coxph(Surv(last_event, survial_censor) ~ MEyellow + gender + tissue_rollup + ajcc_pathologic_stage + age_at_diagnosis_years + year_of_diagnosis + TotalScore, data = annotated_me) |>
+  gtsummary::tbl_regression()
+
+```
+
+
 # Cell signature enrichment in modules
 
 ## Retreive cell signatures
@@ -633,10 +655,18 @@ module_cell_type_correlations_long = module_cell_type_correlations |>
 #png(file = "../outputs/module_deconvolution_correlations.png", width = 800, height = 480)
 ggplot(module_cell_type_correlations_long, aes(x = module_name, y = name, fill = value)) +
   geom_tile() +
-  scale_fill_gradient2(low="blue", mid = "white", high="red") +
+  scale_fill_gradient2(low="red", mid = "white", high="blue") +
   theme(axis.text.x = element_text(angle = 90)) +
-  labs(x = "WGCNA Module", y = "Epic Deconvolution Cell Type", title = "Correlations: Module Eigen Values & Cell Type Frequencies")
+  labs(x = "WGCNA Module", y = "Epic Deconvolution Cell Type", title = "Correlations: Module Eigen Values & Cell Type Frequencies", fill = "Correlation Coefficient")
 #dev.off()
+
+```
+
+
+# EMT signature enrichment
+```{r}
+
+
 
 ```
 

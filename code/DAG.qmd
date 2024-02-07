@@ -12,47 +12,27 @@ library(ggplot2)
 
 ```{r}
 
-dagify("Survival" ~ "EMT_Score") |> 
-  ggdag() +
-    theme_dag()
-
-```
-
-```{r}
-
-survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infiltrate + Treatment + Sex,
-                      EMT_Score ~ Disease_Stage + Tumor_Purity + Tissue_Rollup,
+survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infiltrate + Treatment + Sex + CAF_Infiltrate,
+                      EMT_Score ~ Disease_Stage +  Tissue_Rollup,
                       Treatment ~ Disease_Stage + Sample_Collection_Year,
                       Immune_Infiltrate ~ Tissue_Rollup,
-                      Tumor_Purity ~ Tissue_Rollup + Immune_Infiltrate,
+                      Tissue_Rollup ~ Disease_Stage,
                       labels = c("Survival" = "Survival",
-                                 "EMT_Score" = "EMT Score",
+                                 "EMT_Score" = "EMT\nScore",
                                  "Disease_Stage" = "Disease Stage",
-                                 "Age" = "Patient Age",
-                                 "Tumor_Purity" = "Sample Tumor \nComposition",
-                                 "Tissue_Rollup" = "Sample Tissue \nSource",
-                                 "Immune_Infiltrate" = "Immune Infiltrate",
-                                 "Sample_Collection_Year" = "Year Sample \nCollected",
-                                 "Treatment" = "Treatment(s) \nReceived",
-                                 "Sex" = "Patient \nSex"),
+                                 "Age" = "Patient\nAge",
+                                 "Tissue_Rollup" = "Sample Tissue\nSource",
+                                 "Immune_Infiltrate" = "Immune\nInfiltrate",
+                                 "Sample_Collection_Year" = "Year Sample\nCollected",
+                                 "Treatment" = "Treatment(s)\nReceived",
+                                 "Sex" = "Patient\nSex",
+                                 "CAF_Infiltrate" = "Cancer Associated\nFibroblasts"),
                       exposure = "EMT_Score",
                       outcome = "Survival")
 
-# png(file = "../outputs/DAG.png", bg = "white")
+
 ggdag(survival_dag, text = FALSE, use_labels = "label") +
     theme_dag()
-# dev.off()
-
-
-#Survival
-#EMT Score
-#Disease Stage
-#Age
-#Tumor purity
-#Tissue
-#Primary vs Met
-#Immune infiltrate
-#Patient Sex
 
 
 ```
