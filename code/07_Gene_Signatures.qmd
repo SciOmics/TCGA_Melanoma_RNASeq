@@ -23,9 +23,15 @@ ggplot2::theme_set(ggplot2::theme_classic())
 # Load Data 
 ```{r}
 
+#normalized expression data
 source("functions/Load_Normalized_Expression.R")
 normalized_data = load_normalized_expression("../outputs/normalized_expression.csv")
 rm(load_normalized_expression)
+
+#sample metadata
+source("functions/Load_Sample_Metadata.R")
+sample_metadata = load_sample_metadata("../data/sample_metadata.csv")
+rm(load_sample_metadata)
 
 ```
 
@@ -138,15 +144,6 @@ ggplot(gsva_results, aes(x = signatures_epi_overlap, y = signatures_mes_overlap,
 
 ```
 
-Plot survival by scores; try a combined score of epi - mes
-```{r}
-
-
-
-
-```
-
-
 # ssGSEA
 ```{r}
 
@@ -222,16 +219,11 @@ ssgsea_results |>
   dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
   coxph(Surv(last_event, survial_censor) ~ patient_mes_gmm_group, data = _)
 
-ssgsea_results |> 
-  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
-  coxph(Surv(last_event, survial_censor) ~ patient_mes_gmm_group + as.integer(stage) + year_of_diagnosis, data = _)
-###NEED TO FIX###
 
 
 ```
 
 Oddly, mesenchymal score high patients seem to have better overall survival. Is the gene signature not appropriate? Am I missing a confounder? 
-Try with epi signatures instead
 
 ### Divide at Median
 ```{r}
@@ -272,7 +264,6 @@ ssgsea_results |>
 
 
 ```
-
 
 #### Epithelial
 ```{r}
@@ -371,8 +362,40 @@ ss_patient_signature |>
 
 
 ```
+# Make a dataframe of results
+```{r}
 
-## Is year of diagnosis a confounder?
+#merge ssGSEA and SingScore results
+gene_signature_results =  merge(ssgsea_results[1:7], ss_patient_signature[1:7], by = "Row.names")
+#remove columns
+gene_signature_results = gene_signature_results |> 
+  dplyr::select(!c("TotalDispersion", "UpDispersion", "DownDispersion"))
+#rename columns
+colnames(gene_signature_results) = c("Sample_ID",
+                                     "ssGSEA_patient_epi_score",
+                                     "ssGSEA_patient_mes_score",
+                                     "ssGSEA_cell_epi_score",
+                                     "ssGSEA_cell_mes_score",
+                                     "ssGSEA_overlap_epi_score",
+                                     "ssGSEA_overlap_mes_score",
+                                     "SingScore_TotalScore",
+                                     "SingScore_mes_score",
+                                     "SingScore_epi_score")
+
+
+
+```
+
+
+# Save Results
+```{r}
+
+write.csv(gene_signature_results, file = "../outputs/epi_mes_signature_scores.csv")
+
+```
+
+
+Is year of diagnosis a confounder?
 
 #To do:
 make a list of signature scores and add to that

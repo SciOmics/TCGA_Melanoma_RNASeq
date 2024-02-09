@@ -27,7 +27,7 @@ rm(load_normalized_expression)
 
 #sample metadata
 source("functions/Load_Sample_Metadata.R")
-sample_metadata1 = load_sample_metadata("../data/sample_metadata.csv")
+sample_metadata = load_sample_metadata("../data/sample_metadata.csv")
 rm(load_sample_metadata)
 
 ```
@@ -190,6 +190,14 @@ sample_metadata |>
 
 
 # Epic Deconvolution
+
+## Save
+```{r}
+
+write.csv(t(deconvolute_results_epic), file = "../outputs/epic_deconvolutions.csv")
+
+```
+
 
 ## Add to sample metadata
 ```{r}

@@ -169,6 +169,14 @@ annotated_me = annotated_me[,c(-1)]
 
 ```
 
+## Save module eigenvalues
+```{r}
+
+write.csv(modules$MEs, file = "../outputs/WGCNA_module_eigenvalues.csv")
+
+```
+
+
 ## Heatmaps
 
 ### Modules vs Samples
