@@ -397,15 +397,14 @@ write.csv(gene_signature_results, file = "../outputs/epi_mes_signature_scores.cs
 
 Is year of diagnosis a confounder?
 
-#To do:
-make a list of signature scores and add to that
+To do:
+Make a list of signature scores and add to that
 Average ssGSEA, Singscore and GSVA scores
 Visualize tissue rollup (e.g. liver, LN)
 Control for stage
 Filter to cutaneous sites only
 Fix cutaneous spelling
 Fix "GESA" to GSEA
-Bayessian statistics on singscore values
-filter to cutaneous only and do diff exp to derive a metastatic signature
-
-# plot all data for correlations
+Bayesian statistics on Singscore values
+Filter to cutaneous only and do diff exp to derive a metastatic signature
+Plot all data for correlations
