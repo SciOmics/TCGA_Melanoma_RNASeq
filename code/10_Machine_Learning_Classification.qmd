@@ -3,24 +3,84 @@ title: "Machine Learning"
 format: html
 ---
 
-# Load data
 ```{r}
 
-#normalized expression data
-source("functions/Load_Normalized_Expression.R")
-normalized_data = load_normalized_expression("../outputs/normalized_expression.csv")
-rm(load_normalized_expression)
+library(dplyr)
+library(ggplot2)
+library(tidymodels)
 
-#sample metadata
-source("functions/Load_Sample_Metadata.R")
-sample_metadata1 = load_sample_metadata("../data/sample_metadata.csv")
-rm(load_sample_metadata)
+set.seed(123)
 
 ```
 
-# Logistic regression to distinguish primary vs mets by deconvolution
 
+# Load data
 ```{r}
+
+#sample metadata
+source("functions/Load_Sample_Metadata.R")
+sample_metadata = load_sample_metadata("../data/sample_metadata.csv")
+rm(load_sample_metadata)
+
+#epi/mes scores
+emt_scores = read.csv("../outputs/epi_mes_signature_scores.csv", row.names = 1)
+rownames(emt_scores) = emt_scores[["Sample_ID"]]
+emt_scores = emt_scores[,-1]
+
+#deconvolutions
+deconvolutions = read.csv("../outputs/epic_deconvolutions.csv", row.names = 1)
+colnames(deconvolutions) = deconvolutions[1,]
+deconvolutions = deconvolutions[2:nrow(deconvolutions),]
+
+#WGCNA modules
+modules = read.csv("../outputs/WGCNA_module_eigenvalues.csv")
+rownames(modules) = modules[["X"]]
+modules = modules[,-1]
+
+```
+
+## Merge
+```{r}
+
+sample_data = emt_scores |> 
+  dplyr::select(ssGSEA_patient_epi_score, ssGSEA_patient_mes_score) |> 
+  merge(deconvolutions, by = "row.names") |> 
+  merge(modules, by.x = "Row.names",  by.y = "row.names") |> 
+  merge(dplyr::select(sample_metadata, sample_id, tumor_descriptor), by.x = "Row.names", by.y = "sample_id")
+
+#one hot encode tumor descriptor
+
+
+#clean up
+rm(list = c("deconvolutions", "emt_scores", "modules", "sample_metadata"))
+
+```
+
+
+# Train/Test Split
+```{r}
+
+data_split = initial_split(sample_data, prop = 0.75)
+
+data_train = training(data_split)
+data_test = testing(data_split)
+
+```
+
+
+# Boosted tree
+```{r}
+
+#need to optimize number of trees
+
+#model
+boosted_tree = boost_tree(trees = 30) |> 
+  set_mode("classification") |> 
+  set_engine("xgboost")
+
+#fit model
+boosted_tree_fit = boosted_tree |> 
+  fit(tumor_descriptor ~ ., data = sample_data)
 
 
 
