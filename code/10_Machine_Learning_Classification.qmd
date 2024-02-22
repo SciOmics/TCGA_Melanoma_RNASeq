@@ -49,7 +49,10 @@ sample_data = emt_scores |>
   merge(dplyr::select(sample_metadata, sample_id, tumor_descriptor), by.x = "Row.names", by.y = "sample_id")
 
 #one hot encode tumor descriptor
-
+sample_data = sample_data |> 
+  mutate(metastatic_status = as.factor(ifelse(tumor_descriptor == "Metastatic", 1, 0)))
+|> 
+  dplyr::select(-tumor_descriptor)
 
 #clean up
 rm(list = c("deconvolutions", "emt_scores", "modules", "sample_metadata"))
@@ -61,9 +64,12 @@ rm(list = c("deconvolutions", "emt_scores", "modules", "sample_metadata"))
 ```{r}
 
 data_split = initial_split(sample_data, prop = 0.75)
-
 data_train = training(data_split)
 data_test = testing(data_split)
+
+#cross validation split
+data_cv = vfold_cv(data_train, v = 10)
+
 
 ```
 
@@ -74,15 +80,24 @@ data_test = testing(data_split)
 #need to optimize number of trees
 
 #model
-boosted_tree = boost_tree(trees = 30) |> 
+boosted_tree = boost_tree(trees = 20) |> 
   set_mode("classification") |> 
   set_engine("xgboost")
 
 #fit model
 boosted_tree_fit = boosted_tree |> 
-  fit(tumor_descriptor ~ ., data = sample_data)
+  fit(metastatic_status ~ ., data = sample_data)
 
+#data frame of predictions and actual values for training set
+test_fit = sample_data |> 
+  select(metastatic_status) |> 
+  bind_cols(predict(boosted_tree_fit, sample_data))
 
+conf_mat(test_fit, truth = metastatic_status, estimate = .pred_class)
+
+#add cross validation and grid search
+
+#parallel processing? 
 
 ```
 
