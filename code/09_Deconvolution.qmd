@@ -9,6 +9,7 @@ library(immunedeconv)
 library(ggplot2)
 library(data.table)
 library(dplyr)
+library(survival)
 
 # set_cibersort_binary("/Users/david/Library/Mobile Documents/com~apple~CloudDocs/Documents/Informatics/CIBERSORT/CIBERSORT.R")
 # set_cibersort_mat("/Users/david/Library/Mobile Documents/com~apple~CloudDocs/Documents/Informatics/CIBERSORT/LM22.txt")
@@ -205,7 +206,7 @@ write.csv(t(deconvolute_results_epic), file = "../outputs/epic_deconvolutions.cs
 #Add epic deconvultion results to sample metadata
 sample_metadata = merge(sample_metadata, deconvolutions$epic, by = "row.names")
 #change columns to numeric
-sample_metadata[,69:76] = as.numeric(unlist(sample_metadata[,69:76]))
+# sample_metadata[,colnames(deconvolutions$epic)] = as.numeric(unlist(colnames(deconvolutions$epic)))
 
 ```
 
@@ -291,6 +292,7 @@ deconvolution_stats = sample_metadata |>
 
 
 ```
+
 ### Plotting function
 ```{r}
 
@@ -311,6 +313,47 @@ decon_plot = function(cell_type){
 ```{r}
  
 lapply(deconvolutions_to_plot, decon_plot)
+
+```
+
+## Survival
+
+### Statistics
+```{r}
+
+#Survival
+survival_stats_function = function(cell_type){
+sample_metadata |>
+  dplyr::select(colnames(deconvolutions$epic), last_event, survial_censor) |>
+  tidyr::pivot_longer(cols = colnames(deconvolutions$epic), names_to = "Cell_Type", values_to = "Value") |>
+  dplyr::filter(Cell_Type == cell_type) |>
+  mutate(cell_type_division = ifelse(Value > median(Value), "high", "low")) |>
+  survival::coxph((Surv(last_event, survial_censor) ~ cell_type_division), data = _) |> 
+  summary()
+}
+
+survival_stats = lapply(colnames(deconvolutions$epic), survival_stats_function)
+names(survival_stats) = colnames(deconvolutions$epic)
+
+#pvalue
+survival_stats$`B cell`$waldtest[3]
+#coefficient
+survival_stats$`B cell`$conf.int[1]
+#confidence interval lower
+survival_stats$`B cell`$conf.int[3]
+#confidence interval upper
+survival_stats$`B cell`$conf.int[4]
+
+```
+#### Dataframe
+```{r}
+
+extract_values = function(cell_type){
+  pvalue = survival_stats[cell_type]$waldtest[3]
+  print(pvalue)
+}
+
+extract_values("B cell")
 
 ```
 

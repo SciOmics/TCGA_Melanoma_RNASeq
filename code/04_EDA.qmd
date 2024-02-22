@@ -10,6 +10,8 @@ format: html
 library(dplyr)
 library(mixOmics)
 library(wesanderson)
+library(ggsurvfit)
+library(ggpubr)
 
 ```
 
@@ -44,28 +46,47 @@ rownames(sample_metadata) = sample_metadata$sample_id
 
 pca_results$x = merge(pca_results$x, sample_metadata, by = "row.names")
 
-ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, label = Row.names, color = tumor_descriptor)) +
+```
+
+## Plots
+```{r}
+
+#Plot colored by primary/met
+plot1 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, label = Row.names, color = tumor_descriptor)) +
     geom_point() +
     geom_label(size = 2) +
     scale_color_manual(values = palette_discrete[c(5,1)]) +
     theme_classic()
 
-ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = tissue_rollup)) +
+#Plot colored by tissue
+plot2 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = tissue_rollup)) +
     geom_point() +
     scale_color_manual(values = palette_discrete) +
     theme_classic()
 
-ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = ajcc_pathologic_stage)) +
+#Plot colored by stage
+plot3 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = ajcc_pathologic_stage)) +
     geom_point() +
     scale_color_manual(values = wes_palette("Zissou1", 13, type = "continuous")) +
     theme_classic()
 
+#png(file = "../outputs/pca_plots.png", height = 350, width = 1400, res = 80)
+ggarrange(plot2, plot3, plot1, 
+          labels = c("A", "B", "C"),
+          nrow = 1)
+#dev.off()
+
+#clean up 
+rm(list = c("plot1", "plot2", "plot3"))
+
 ```
+
 
 # Stage vs. Primary/Met
 ```{r}
 
 table(sample_metadata$tumor_descriptor, sample_metadata$ajcc_pathologic_stage)
+#Appears that some stage I samples are labeled metastatic. Hmmm....
 
 ```
 
@@ -91,12 +112,15 @@ sample_metadata = sample_metadata |>
     )))
 
 #Survival plot
+#png(filename = "../outputs/survival_plot_stage.png", height = 600, width = 1200, res = 200)
 sample_metadata |> 
     dplyr::filter(stage != "0") |> 
     survfit2(Surv(last_event, survial_censor) ~ stage , data = _) |>
     ggsurvfit() +
-    add_risktable(risktable_stats = "n.risk") +
-    add_pvalue()
+    #add_risktable(risktable_stats = "n.risk") +
+    add_pvalue() +
+    ggtitle(label = "Overall Survival by Disease Stage")
+#dev.off()
 
 ```
 

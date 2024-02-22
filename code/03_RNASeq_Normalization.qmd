@@ -16,7 +16,12 @@ library(limma)
 # Load data
 ```{r}
 
-#tcga_data = readRDS("../data/tcga_skcm_data.RDS")
+tcga_data = readRDS("../data/tcga_skcm_data.RDS")
+
+#sample metadata
+source("functions/Load_Sample_Metadata.R")
+sample_metadata = load_sample_metadata("../data/sample_metadata.csv")
+rm(load_sample_metadata)
 
 ```
 

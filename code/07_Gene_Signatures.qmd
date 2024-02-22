@@ -123,11 +123,13 @@ gsva_results = merge(gsva_results,
 
 ##MAKE INTO A FUNCTION##
 
+#png(filename = "../outputs/GSVA_EMT_plot.png", height = 800, width = 1000, res = 200)
 ggplot(gsva_results, aes(x = patient_epi, y = patient_mes, color = tumor_descriptor)) +
   geom_point() +
   scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
   labs(x = "Epithelial", y = "Mesenchymal", title = "Patient Tumor Derived Signatures") +
   theme_classic()
+#dev.off()
 
 ggplot(gsva_results, aes(x = cell_epi, y = cell_mes, color = tumor_descriptor)) +
   geom_point() +
@@ -167,11 +169,13 @@ ssgsea_results = merge(ssgsea_results,
 ## Plots
 ```{r}
 
+#png(filename = "../outputs/ssGSEA_EMT_plot.png", height = 800, width = 1000, res = 200)
 ggplot(ssgsea_results, aes(x = patient_epi, y = patient_mes, color = tumor_descriptor)) +
   geom_point() +
   scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
-  labs(x = "Epithelial", y = "Mesenchymal", title = "Patient Tumor Derived Signatures") +
+  labs(x = "Epithelial", y = "Mesenchymal", title = "Patient Tumor Derived ssGSEA Signatures") +
   theme_classic()
+#dev.off()
 
 ggplot(ssgsea_results, aes(x = cell_epi, y = cell_mes, color = tumor_descriptor)) +
   geom_point() +
@@ -307,6 +311,15 @@ ss_patient_signature = merge(ss_patient_signature,
 ## Plots
 ```{r}
 
+#Epi vs Mes scores
+#png(filename = "../outputs/SingScore_EMT_plot.png", height = 800, width = 1000, res = 200)
+ggplot(ss_patient_signature, aes(x = -DownScore, y = UpScore, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Epithelial", y = "Mesenchymal", title = "Patient Tumor Derived SingScore Signatures") +
+  theme_classic()
+#dev.off()
+
 ggplot(ss_patient_signature, aes(x = tumor_descriptor, y = TotalScore, color = tissue_rollup)) +
   geom_jitter(width = 0.25) +
   scale_color_manual(values = palette_discrete) +
@@ -387,6 +400,16 @@ colnames(gene_signature_results) = c("Sample_ID",
 ```
 
 
+# Correlations of different signature methods
+```{r}
+
+ggplot(gene_signature_results, aes(x = ssGSEA_patient_mes_score, y = SingScore_mes_score)) +
+  geom_point()
+
+```
+
+
+
 # Save Results
 ```{r}
 
@@ -394,17 +417,8 @@ write.csv(gene_signature_results, file = "../outputs/epi_mes_signature_scores.cs
 
 ```
 
+# Bayesian statistics on Singscore values - primary vs met
+```{r}
 
-Is year of diagnosis a confounder?
+```
 
-To do:
-Make a list of signature scores and add to that
-Average ssGSEA, Singscore and GSVA scores
-Visualize tissue rollup (e.g. liver, LN)
-Control for stage
-Filter to cutaneous sites only
-Fix cutaneous spelling
-Fix "GESA" to GSEA
-Bayesian statistics on Singscore values
-Filter to cutaneous only and do diff exp to derive a metastatic signature
-Plot all data for correlations

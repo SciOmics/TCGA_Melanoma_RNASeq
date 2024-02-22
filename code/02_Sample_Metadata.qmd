@@ -79,7 +79,7 @@ unique(sample_metadata[,"disease_type"])
 #primary_site and disease_type have only one value since this is a melanoma data set
 #treatment column has generic information not of use
 
-exclude_columns = c("barcode", "sample_submitter_id", "composition", "state", "pathology_report_uuid", "submitter_id", "oct_embedded",
+exclude_columns = c("sample_submitter_id", "composition", "state", "pathology_report_uuid", "submitter_id", "oct_embedded",
                     "specimen_type", "is_ffpe", "tissue_type", "synchronous_malignancy", "days_to_diagnosis", "last_known_disease_status",
                     "classification_of_tumor", "diagnosis_id", "icd_10_code", "tumor_grade", "progression_or_recurrence", "alcohol_history",
                     "exposure_id", "demographic_id", "bcr_patient_barcode", "project_id", "name", "releasable", "released")

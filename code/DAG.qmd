@@ -12,11 +12,12 @@ library(ggplot2)
 
 ```{r}
 
-survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infiltrate + Treatment + Sex + CAF_Infiltrate,
-                      EMT_Score ~ Disease_Stage +  Tissue_Rollup,
+survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infiltrate + Treatment + Sex + CAF_Infiltrate + Tumor_Gene_Profile,
+                      EMT_Score ~ Disease_Stage +  Tissue_Rollup + Tumor_Gene_Profile,
                       Treatment ~ Disease_Stage + Sample_Collection_Year,
                       Immune_Infiltrate ~ Tissue_Rollup,
                       Tissue_Rollup ~ Disease_Stage,
+                      Tumor_Gene_Profile ~ Disease_Stage + Immune_Infiltrate + CAF_Infiltrate + Tissue_Rollup,
                       labels = c("Survival" = "Survival",
                                  "EMT_Score" = "EMT\nScore",
                                  "Disease_Stage" = "Disease Stage",
@@ -26,7 +27,8 @@ survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infilt
                                  "Sample_Collection_Year" = "Year Sample\nCollected",
                                  "Treatment" = "Treatment(s)\nReceived",
                                  "Sex" = "Patient\nSex",
-                                 "CAF_Infiltrate" = "Cancer Associated\nFibroblasts"),
+                                 "CAF_Infiltrate" = "Cancer Associated\nFibroblasts",
+                                 "Tumor_Gene_Profile" = "Sample\nGene Expression\nProfile"),
                       exposure = "EMT_Score",
                       outcome = "Survival")
 

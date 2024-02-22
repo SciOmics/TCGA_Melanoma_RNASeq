@@ -183,10 +183,12 @@ write.csv(modules$MEs, file = "../outputs/WGCNA_module_eigenvalues.csv")
 ```{r}
 
 #Modules vs Samples
+png(filename = "../outputs/WGCNA_module_sample_heatmap.png", height = 900, width = 800, res = 200)
 annotated_me |> 
   dplyr::select(starts_with("ME")) |> 
   as.matrix() |> 
   heatmap(scale = "column", labRow = annotated_me$tumor_descriptor)
+dev.off()
 
 #Heatmap of genes in MEblack module only
 MEblack_genes = module_genes |> 

@@ -10,6 +10,7 @@ library(dplyr)
 library(EnhancedVolcano)
 library(AnnotationDbi)
 library(org.Hs.eg.db)
+library(limma)
 
 ```
 
@@ -36,7 +37,7 @@ diff_exp_table = topTable(diff_exp, sort.by = "P", n = Inf)
 ```
 
 
-# Add gene symbols
+## Add gene symbols
 ```{r}
 
 #Need to remove decimal and trailing numbers from ENSEMBL ids (these are version numbers)
@@ -58,13 +59,24 @@ diff_exp_table$entrez_symbol = mapIds(org.Hs.eg.db,
 
 ```
 
+## Save
+```{r}
+
+write.csv(diff_exp_table, file = "../outputs/differential_expression.csv")
+
+```
+
+
 # Volcano Plot
 ```{r}
 
+png(filename = "../outputs/volcano_plot.png", height = 800, width = 800, res = 120)
 EnhancedVolcano(diff_exp_table,
                 lab = diff_exp_table$gene_symbol,
                 x = "logFC",
-                y = "adj.P.Val")
+                y = "adj.P.Val",
+                title = "Primary vs. Metastatic Samples")
+dev.off()
 
 #Are the values in logFC base 10? 
 

@@ -13,9 +13,15 @@ library(clusterProfiler)
 # Load Data
 ```{r}
 
+#normalized expression data
 source("functions/Load_Normalized_Expression.R")
 normalized_data = load_normalized_expression("../outputs/normalized_expression.csv")
 rm(load_normalized_expression)
+
+#differential expression data
+diff_exp_table = read.csv("../outputs/differential_expression.csv")
+rownames(diff_exp_table) = diff_exp_table$X
+diff_exp_table = diff_exp_table[,2:ncol(diff_exp_table)]
 
 ```
 
@@ -31,11 +37,15 @@ enrich_GO_results = enrichGO(significant_genes$entrez_symbol,
                              OrgDb = org.Hs.eg.db,
                              ont = "ALL")
 
-clusterProfiler::dotplot(enrich_GO_results, showCategory = 20)
-
 ```
 
+## Plots
+```{r}
 
+clusterProfiler::dotplot(enrich_GO_results, 
+                         showCategory = 20)
+
+```
 
 
 # GSEA
@@ -51,10 +61,18 @@ ranked_genes = setNames(ranked_genes$logFC, ranked_genes$entrez_symbol)
 GESA_KEGG_results = clusterProfiler::gseKEGG(ranked_genes)
 GESA_GO_results = clusterProfiler::gseGO(ranked_genes, OrgDb = org.Hs.eg.db)
 
-#Plot pathways
-clusterProfiler::dotplot(GESA_KEGG_results, showCategory = 20, split = ".sign") + facet_grid(.~.sign)
-clusterProfiler::dotplot(GESA_GO_results, showCategory = 20, split = ".sign") + facet_grid(.~.sign)
+
 
 ```
 
-# Other visualizations
+## Plots
+```{r}
+
+clusterProfiler::dotplot(GESA_KEGG_results, showCategory = 10, split = ".sign") + facet_grid(.~.sign)
+clusterProfiler::dotplot(GESA_GO_results, showCategory = 10, split = ".sign") + facet_grid(.~.sign)
+
+ridgeplot(GESA_KEGG_results)
+ridgeplot(GESA_GO_results)
+
+```
+
