@@ -21,4 +21,4 @@ Factors that are hypothesized to impact survival:
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/yellow_module_survival.png?raw=true)  
 **Unadjusted survival curves for WGCNA yellow module eigen values.**
   
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/pca_plot_stage.png?raw=true)  
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/pca_plots.png?raw=true)  
