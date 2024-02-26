@@ -7,9 +7,16 @@ format: html
 
 library(dplyr)
 library(ggplot2)
+library(skimr)
 library(tidymodels)
+library(vip)
+library(themis)
+
+theme_set(theme_classic())
 
 set.seed(123)
+
+doParallel::registerDoParallel()
 
 ```
 
@@ -50,9 +57,12 @@ sample_data = emt_scores |>
 
 #one hot encode tumor descriptor
 sample_data = sample_data |> 
-  mutate(metastatic_status = as.factor(ifelse(tumor_descriptor == "Metastatic", 1, 0)))
-|> 
-  dplyr::select(-tumor_descriptor)
+  mutate(metastatic_status = as.factor(ifelse(tumor_descriptor == "Metastatic", 1, 0))) |> 
+  dplyr::select(-tumor_descriptor, -Row.names)
+
+#change cell type info to numeric
+sample_data = sample_data |> 
+  mutate_if(is.character, as.numeric)
 
 #clean up
 rm(list = c("deconvolutions", "emt_scores", "modules", "sample_metadata"))
@@ -60,44 +70,215 @@ rm(list = c("deconvolutions", "emt_scores", "modules", "sample_metadata"))
 ```
 
 
-# Train/Test Split
+#EDA
 ```{r}
 
-data_split = initial_split(sample_data, prop = 0.75)
+#skimr
+skimr::skim(sample_data)
+
+#cases of met vs primary
+table(sample_data$metastatic_status)
+
+```
+
+
+# Data Splits
+```{r}
+
+#train/test split
+data_split = initial_split(sample_data, 
+                           prop = 0.75,
+                           strata = metastatic_status)
+
+
 data_train = training(data_split)
 data_test = testing(data_split)
 
+
 #cross validation split
-data_cv = vfold_cv(data_train, v = 10)
+data_cv = vfold_cv(data_train, 
+                   v = 10,
+                   strata = metastatic_status)
 
 
 ```
 
-
-# Boosted tree
+# Set Model
 ```{r}
 
-#need to optimize number of trees
-
-#model
-boosted_tree = boost_tree(trees = 20) |> 
-  set_mode("classification") |> 
-  set_engine("xgboost")
-
-#fit model
-boosted_tree_fit = boosted_tree |> 
-  fit(metastatic_status ~ ., data = sample_data)
-
-#data frame of predictions and actual values for training set
-test_fit = sample_data |> 
-  select(metastatic_status) |> 
-  bind_cols(predict(boosted_tree_fit, sample_data))
-
-conf_mat(test_fit, truth = metastatic_status, estimate = .pred_class)
-
-#add cross validation and grid search
-
-#parallel processing? 
+boosted_tree = boost_tree(trees = tune(),
+           tree_depth = tune(),
+           min_n = tune(),
+           loss_reduction = tune(),
+           sample_size = tune(),
+           mtry = tune(),
+           learn_rate = tune()) |> 
+  set_engine("xgboost") |> 
+  set_mode("classification")
 
 ```
 
+
+# Recipe
+```{r}
+
+#dealing with class imbalance 
+boosted_recipe = recipe(metastatic_status ~ ., data = data_train) |> 
+                        step_smote(metastatic_status)
+
+boosted_recipe |> prep()
+
+#check for class balancing
+boosted_recipe |> prep() |>
+  bake(new_data = NULL) |> 
+  count(metastatic_status)
+
+```
+
+# Workflow
+```{r}
+
+boosted_workflow = workflow() |> 
+  add_recipe(boosted_recipe) |> 
+  add_model(boosted_tree)
+  # fit_resamples(resamples = data_cv,
+  #               metric_set(roc_auc, accuracy, sensititivity, specificity),
+  #               control = control_resamples(save_pred = TRUE)) 
+
+```
+
+
+# Tune Hyperparameters
+
+## Set parameter search criteria
+```{r}
+
+grid_search = grid_max_entropy(
+  trees(),
+  tree_depth(),
+  min_n(),
+  loss_reduction(),
+  sample_size = sample_prop(),
+  finalize(mtry(), data_train),
+  learn_rate(),
+  size = 1000
+  )
+
+```
+
+## Fit with Cross Validation 
+```{r}
+
+boosted_tune = tune_grid(boosted_workflow,
+          resamples = data_cv,
+          grid = grid_search,
+          control = control_grid(save_pred = TRUE))
+
+```
+
+## Plot Parameters
+```{r}
+
+boosted_tune |>
+  collect_metrics() |> 
+  filter(.metric == "roc_auc") |> 
+  select(mean, mtry:sample_size) |> 
+  pivot_longer(mtry:sample_size,
+               names_to = "hyperparameter",
+               values_to = "value") |> 
+  ggplot(aes(x = value, y = mean, color = hyperparameter)) +
+    geom_point() +
+    geom_smooth(method = "lm", color = "black") +
+    facet_wrap(~hyperparameter, scales = "free_x")
+
+```
+
+## Top Models
+```{r}
+
+boosted_tune |> 
+  show_best()
+
+```
+
+
+## Choose Final Hyperparameter Values
+```{r}
+
+#average top five best models
+# optimized_parameters = show_best(boosted_tune, "roc_auc") |> 
+#   summarize(mtry = mean(mtry),
+#             trees = round(mean(trees)),
+#             min_n = round(mean(min_n)),
+#             tree_depth = round(mean(tree_depth)),
+#             learn_rate = mean(learn_rate),
+#             loss_reduction = mean(loss_reduction),
+#             sample_size = mean(sample_size))
+
+#use the best model instead
+optimized_parameters = select_best(boosted_tune,
+                                   "roc_auc")
+
+
+```
+
+
+# Train Model
+
+## Set hyperparameters
+```{r}
+
+optimized_boosted_tree = finalize_workflow(boosted_workflow,
+                  optimized_parameters)
+
+```
+
+## Fit to training data
+```{r}
+
+optimized_boosted_tree |> 
+  fit(data = data_train) |> 
+  pull_workflow_fit() |> 
+  vip(geom = "point")
+
+```
+
+
+# Fit to test data
+```{r}
+
+results = last_fit(optimized_boosted_tree,
+         data_split)
+
+```
+
+## Accuracy and AUC
+```{r}
+
+results |> 
+  collect_metrics()
+
+```
+
+
+
+## Confusion Matrix
+
+```{r}
+
+results |>  
+  collect_predictions() |> 
+  conf_mat(truth = metastatic_status, estimate = .pred_class)
+
+```
+
+
+## ROC Plot
+```{r}
+
+results |>  
+  collect_predictions() |> 
+  roc_curve(truth = metastatic_status, .pred_0) |> 
+  autoplot()
+
+```
