@@ -53,12 +53,12 @@ dev.off()
 
 #Backdoor paths
 ggdag_paths(survival_dag,
-            from = "EMT_Score",
+            from = "Immune_Infiltrate",
             to = "Survival") 
 
 #Adjustment sets
 ggdag_adjustment_set(survival_dag,
-                     exposure = c("EMT_Score"),
+                     exposure = c("Immune_Infiltrate"),
                      outcome = "Survival",
                      text = FALSE,
                      use_labels = "label") +
