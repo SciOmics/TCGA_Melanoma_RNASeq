@@ -4,5 +4,6 @@
 .Rproj.user
 ./.git/objects/pack/pack-defb5e40900ae0adf201fcb9d446e719a4480edc.pack
 ./data/tcga_skcm_data.RDS
-./outputs/normalized_expression.csv
 ./.Rproj.user/shared/notebooks/3531AE8E-08_WGCNA/1/s/cthjttyc11ddn 2/000011.snapshot
+./outputs/differential_expression.csv
+./outputs/normalized_expression.csv
