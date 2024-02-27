@@ -258,6 +258,12 @@ results = last_fit(optimized_boosted_tree,
 results |> 
   collect_metrics()
 
+auc = results |> 
+  collect_metrics() |> 
+  filter(.metric == "roc_auc") |> 
+  pull(.estimate)
+  
+
 ```
 
 
@@ -276,9 +282,12 @@ results |>
 ## ROC Plot
 ```{r}
 
+png(filename = "../outputs/plots/boostedtree_ROC.png", res = 180)
 results |>  
   collect_predictions() |> 
   roc_curve(truth = metastatic_status, .pred_0) |> 
-  autoplot()
+  autoplot() +
+  annotate("text", x = 0.9, y = 0, label = paste0("AUC: ", round(auc, 4)))
+dev.off()
 
 ```
