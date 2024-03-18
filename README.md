@@ -65,6 +65,12 @@ Overall survival probability gets shorter as disease stage increases. This is wh
 
 **Figure 5. Gene set enrichment analysis: primary vs. metastatic samples.**
 
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/Epi_Mes_scores.png?raw=true)  
+
+**Figure 6. Epithelial–Mesenchymal scores.** Using epithelial and mesenchymal gene signatures from ![Tan TZ, et al. EMBO Mol Med. 2014.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4287932/)
+
+
+____________
 
 ![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
 **Directed acyclic graph of hypothesized variables impacting patient overall survival**
