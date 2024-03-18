@@ -14,10 +14,11 @@ Bulk RNA-seq data from TCGA Skin Cutaneous Melanoma (SKCM) dataset was downloade
 | Primary | Cutaneous | 96 |
 | Primary | Lymph Node | 1 |
 | Primary | Mucosal | 1 |
+
 **Table 1. Summary of samples.**
 
-
 The sample labeled primary that is also lymph node will be omitted, as will the primary/mucosal sample. 
+
 
 ![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
 **Directed acyclic graph of hypothesized variables impacting patient overall survival**
