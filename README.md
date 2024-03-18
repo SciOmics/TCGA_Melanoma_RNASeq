@@ -50,7 +50,7 @@ ___
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plot_cutaneous.png?raw=true)  
 
 **Figure 2. PCA plot filtered to only cutanous samples**
-There does indeed appear to be some seperating along PC1 and PC2, a maybe a bit in PC3. 
+There does indeed appear to be some seperating along PC1 and PC2, and maybe a bit in PC3. 
 
 ___
 
@@ -81,8 +81,14 @@ ___
 
 ___
 
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/singscore_primary_met.png?raw=true)  
+
+**Figure 7. Epithelial–Mesenchymal scores of primary vs. metastatic samples.**
+
+___
 
 
+**Figure 8. Overall survival by epithelial–mesenchymal score.**
 
 ___
 
