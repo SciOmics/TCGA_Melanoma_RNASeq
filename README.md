@@ -17,7 +17,15 @@ Bulk RNA-seq data from TCGA Skin Cutaneous Melanoma (SKCM) dataset was downloade
 
 **Table 1. Summary of samples.**
 
-The sample labeled primary that is also lymph node will be omitted, as will the primary/mucosal sample. 
+There shouldn't be "Primary" samples from non-cutaneous tissues. These are mislabeled and will be removed. 
+
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plots.png?raw=true)  
+
+**Figure 1. PCA plots of normalized expression**
+
+
+
 
 
 ![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
@@ -32,7 +40,7 @@ The sample labeled primary that is also lymph node will be omitted, as will the 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/yellow_module_survival.png?raw=true)  
 **Unadjusted survival curves for WGCNA yellow module eigen values.**
   
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plots.png?raw=true)  
+
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/boostedtree_ROC.png?raw=true)  
 
