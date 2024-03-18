@@ -20,20 +20,20 @@ Bulk RNA-seq data from TCGA Skin Cutaneous Melanoma (SKCM) dataset was downloade
 There shouldn't be "Primary" samples from non-cutaneous tissues. These are mislabeled and will be removed. 
 
 | Stage | Primary Sample Count | Metastatic Sample Count |
-| ___ | ___ | ___ |
-0 | 0 | 7 |
-1 | 1 | 29 |
-1A | 0 | 18 |
-1B | 1 | 28 |
-2 | 4 | 26 |
-2A | 4 | 14 |
-2B | 9 | 19 |
-2C | 49 | 15 |
-3 | 2 | 39 |
-3A | 1 | 15 |
-3B | 12 | 35 |
-3C | 12 | 55 |
-4 | 3 | 21
+| --- | --- | --- |
+| 0 | 0 | 7 |
+| 1 | 1 | 29 |
+| 1A | 0 | 18 |
+| 1B | 1 | 28 |
+| 2 | 4 | 26 |
+| 2A | 4 | 14 |
+| 2B | 9 | 19 |
+| 2C | 49 | 15 |
+| 3 | 2 | 39 |
+| 3A | 1 | 15 |
+| 3B | 12 | 35 |
+| 3C | 12 | 55 |
+| 4 | 3 | 21 |
 
 **Table 2. Summary of the number of samples from disease stages.**
 
