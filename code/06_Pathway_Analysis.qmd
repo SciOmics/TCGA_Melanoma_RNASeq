@@ -71,8 +71,26 @@ GESA_GO_results = clusterProfiler::gseGO(ranked_genes, OrgDb = org.Hs.eg.db)
 clusterProfiler::dotplot(GESA_KEGG_results, showCategory = 10, split = ".sign") + facet_grid(.~.sign)
 clusterProfiler::dotplot(GESA_GO_results, showCategory = 10, split = ".sign") + facet_grid(.~.sign)
 
-ridgeplot(GESA_KEGG_results)
-ridgeplot(GESA_GO_results)
+ridgeplot(GESA_KEGG_results, showCategory = 10)
+ridgeplot(GESA_GO_results, showCategory = 10)
+
+```
+
+### Save plots
+```{r}
+
+plot1 = clusterProfiler::dotplot(GESA_KEGG_results, 
+                                 showCategory = 5, 
+                                 split = ".sign") + 
+  facet_grid(.~.sign)
+
+plot2 = ridgeplot(GESA_GO_results, showCategory = 10)
+
+png(filename = "../outputs/plots/GSEA.png", height = 1200, width = 2200, res = 120)
+ggarrange(plot1, plot2,
+          ncols = 2,
+          labels = c("GSEA - KEGG", "GSEA - GO"))
+dev.off()
 
 ```
 
