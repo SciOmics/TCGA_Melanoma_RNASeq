@@ -18,7 +18,9 @@ Bulk RNA-seq data from TCGA Skin Cutaneous Melanoma (SKCM) dataset was downloade
 **Table 1. Summary of the number of sample from different tissue sites.**
 
 There shouldn't be "Primary" samples from non-cutaneous tissues. These are mislabeled and will be removed. 
-
+  
+  
+  
 | Stage | Primary Sample Count | Metastatic Sample Count |
 | --- | --- | --- |
 | 0 | 0 | 7 |
@@ -38,13 +40,15 @@ There shouldn't be "Primary" samples from non-cutaneous tissues. These are misla
 **Table 2. Summary of the number of samples from disease stages.**
 
 There shouldn't be metastatic samples labeled Stage 0 or stage 1, and probably not stage 2 either. This is concerning. I could eliminate early stage samples, but this would substaintally lower our sample size. I'll leave these samples in for now and see how they related to other samples in a PCA. 
-
+  
+  
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plots.png?raw=true)  
 
 **Figure 1. PCA plots of normalized expression**
 
 There is some seperation of primary vs. metastatic samples in PC1 and PC2, but this likely driven by the lymph node metastatic samples. 
+
 
 
 
