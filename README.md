@@ -1,8 +1,7 @@
-This repo is to demo analysis approaches for bulk RNA-seq data. 
-\
 **Under Construction**
 
-Bulk RNA-seq data from TCGA Skin Cutaneous Melanoma (SKCM) dataset was downloaded.
+This repo is to demo analysis approaches for bulk RNA-seq data using data from TCGA Skin Cutaneous Melanoma (SKCM) dataset.
+
 
 | Sample Origin | Tissue | Sample Count |
 | --- | --- | --- |
