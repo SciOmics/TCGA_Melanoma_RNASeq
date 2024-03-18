@@ -86,9 +86,9 @@ plot1 = clusterProfiler::dotplot(GESA_KEGG_results,
 
 plot2 = ridgeplot(GESA_GO_results, showCategory = 10)
 
-png(filename = "../outputs/plots/GSEA.png", height = 1200, width = 2200, res = 120)
+png(filename = "../outputs/plots/GSEA.png", height = 800, width = 850, res = 100)
 ggarrange(plot1, plot2,
-          ncols = 2,
+          nrow = 2,
           labels = c("GSEA - KEGG", "GSEA - GO"))
 dev.off()
 
