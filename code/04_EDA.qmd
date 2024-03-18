@@ -18,9 +18,15 @@ library(ggpubr)
 # Load Data
 ```{r}
 
+#normalized expression data
 source("functions/Load_Normalized_Expression.R")
 normalized_data = load_normalized_expression("../outputs/normalized_expression.csv")
 rm(load_normalized_expression)
+
+#sample metadata
+source("functions/Load_Sample_Metadata.R")
+sample_metadata = load_sample_metadata("../data/sample_metadata.csv")
+rm(load_sample_metadata)
 
 ```
 
@@ -51,42 +57,72 @@ pca_results$x = merge(pca_results$x, sample_metadata, by = "row.names")
 ## Plots
 ```{r}
 
-#Plot colored by primary/met
-plot1 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, label = Row.names, color = tumor_descriptor)) +
+#sample labels
+plot1 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, label = sample_id)) +
     geom_point() +
-    geom_label(size = 2) +
+    geom_label(size = 3) +
+    scale_color_manual(values = palette_discrete[c(5,1)]) +
+    theme_classic()
+
+#Plot colored by primary/met
+plot2 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = tumor_descriptor)) +
+    geom_point(size = 4) +
     scale_color_manual(values = palette_discrete[c(5,1)]) +
     theme_classic()
 
 #Plot colored by tissue
-plot2 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = tissue_rollup)) +
-    geom_point() +
+plot3 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = tissue_rollup, shape = tumor_descriptor)) +
+    geom_point(size = 4) +
     scale_color_manual(values = palette_discrete) +
     theme_classic()
 
 #Plot colored by stage
-plot3 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = ajcc_pathologic_stage)) +
-    geom_point() +
+plot4 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = ajcc_pathologic_stage, shape = tumor_descriptor)) +
+    geom_point(size = 4) +
     scale_color_manual(values = wes_palette("Zissou1", 13, type = "continuous")) +
     theme_classic()
 
-#png(file = "../outputs/pca_plots.png", height = 350, width = 1400, res = 80)
-ggarrange(plot2, plot3, plot1, 
-          labels = c("A", "B", "C"),
-          nrow = 1)
-#dev.off()
+png(file = "../outputs/plots/pca_plots.png", height = 850, width = 1000, res = 80)
+ggarrange(plot1, plot2, plot3, plot4, 
+          labels = c("A", "B", "C", "D"),
+          nrow = 2,
+          ncol = 2)
+dev.off()
 
 #clean up 
-rm(list = c("plot1", "plot2", "plot3"))
+rm(list = c("plot1", "plot2", "plot3", "plot4"))
 
 ```
 
 
-# Stage vs. Primary/Met
+## Filtered to cutanous
 ```{r}
 
-table(sample_metadata$tumor_descriptor, sample_metadata$ajcc_pathologic_stage)
-#Appears that some stage I samples are labeled metastatic. Hmmm....
+#PC1 vs PC2
+plot1 = as.data.frame(pca_results$x) |> 
+    dplyr::filter(tissue_rollup == "Cutaneous") |> 
+    ggplot(aes(x = PC1, y = PC2, color = tumor_descriptor)) +
+        geom_point(size = 4) +
+        scale_color_manual(values = palette_discrete[c(5,1)]) +
+        theme_classic()
+
+#PC2 vs PC3
+plot2 = as.data.frame(pca_results$x) |> 
+    dplyr::filter(tissue_rollup == "Cutaneous") |> 
+    ggplot(aes(x = PC2, y = PC3, color = tumor_descriptor)) +
+        geom_point(size = 4) +
+        scale_color_manual(values = palette_discrete[c(5,1)]) +
+        theme_classic()
+
+png(file = "../outputs/plots/pca_plot_cutaneous.png", height = 500, width = 1000, res = 80)
+ggarrange(plot1, plot2, 
+          labels = c("A", "B"),
+          ncol = 2)
+dev.off()
+
+#clean up 
+rm(list = c("plot1", "plot2"))
+
 
 ```
 
@@ -112,15 +148,17 @@ sample_metadata = sample_metadata |>
     )))
 
 #Survival plot
-#png(filename = "../outputs/survival_plot_stage.png", height = 600, width = 1200, res = 200)
+png(filename = "../outputs/plots/survival_plot_stage.png", height = 600, width = 800, res = 200)
 sample_metadata |> 
     dplyr::filter(stage != "0") |> 
     survfit2(Surv(last_event, survial_censor) ~ stage , data = _) |>
     ggsurvfit() +
     #add_risktable(risktable_stats = "n.risk") +
     add_pvalue() +
-    ggtitle(label = "Overall Survival by Disease Stage")
-#dev.off()
+    ggtitle(label = "Overall Survival by Disease Stage") +
+    xlab ("Days") +
+    scale_color_manual(values = palette_discrete[c(5,2,3,1)])
+dev.off()
 
 ```
 

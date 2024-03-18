@@ -70,7 +70,7 @@ write.csv(diff_exp_table, file = "../outputs/differential_expression.csv")
 # Volcano Plot
 ```{r}
 
-png(filename = "../outputs/volcano_plot.png", height = 800, width = 800, res = 120)
+png(filename = "../outputs/plots/volcano_plot.png", height = 800, width = 800, res = 120)
 EnhancedVolcano(diff_exp_table,
                 lab = diff_exp_table$gene_symbol,
                 x = "logFC",
