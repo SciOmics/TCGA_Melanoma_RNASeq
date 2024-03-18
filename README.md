@@ -61,6 +61,9 @@ Overall survival probability gets shorter as disease stage increases. This is wh
 
 **Figure 4. Volcano plot: primary vs. metastatic samples.**
 
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/GSEA.png?raw=true)  
+
+**Figure 5. Gene set enrichment analysis: primary vs. metastatic samples.**
 
 
 ![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
