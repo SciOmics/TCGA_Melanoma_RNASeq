@@ -45,7 +45,7 @@ sample_metadata = sample_metadata |>
     dplyr::filter(ajcc_pathologic_stage != "Not Reported") |> 
     #add tissue rollup
     dplyr::mutate(tissue_rollup = case_when(
-        site_of_resection_or_biopsy %in% Tissue_Terms$Cutaneous ~ "Cutanous",
+        site_of_resection_or_biopsy %in% Tissue_Terms$Cutaneous ~ "Cutaneous",
         site_of_resection_or_biopsy %in% Tissue_Terms$Lymph_Nodes ~ "Lymph_Nodes",
         site_of_resection_or_biopsy %in% Tissue_Terms$CNS ~ "CNS",
         site_of_resection_or_biopsy %in% Tissue_Terms$Mucosal ~ "Mucosal",
@@ -100,12 +100,49 @@ rm(list = c("list_columns", "exclude_columns"))
 
 ```
 
+## Check samples
+
+### Tissue site vs. Primary/Metastatic
+```{r}
+
+sample_metadata |> 
+    group_by(tumor_descriptor) |> 
+    count(tissue_rollup)
+
+```
+
+### Disease stage vs. Primary/Metastatic
+```{r}
+
+sample_metadata |> 
+    group_by(tumor_descriptor) |> 
+    count(ajcc_pathologic_stage)
+
+```
+
+
+## Remove incorrectly labeled samples
+```{r}
+
+samples_to_omit = sample_metadata |> 
+    dplyr::filter(tumor_descriptor == "Primary" & tissue_rollup != "Cutaneous") |> 
+    pull(sample_id)
+
+sample_metadata = sample_metadata |> 
+    dplyr::filter(sample_id != samples_to_omit)
+
+rm(samples_to_omit)
+
+```
+
+
 # Save
 ```{r}
 
 write.csv(sample_metadata, file = "../data/sample_metadata.csv")
 
 ```
+
 
 
 
