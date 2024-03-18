@@ -2,6 +2,12 @@
 
 This repo is to demo analysis approaches for bulk RNA-seq data using data from TCGA Skin Cutaneous Melanoma (SKCM) dataset.
 
+Goals: 
+1) Contrast primary vs metastatic samples. 
+2) Determine variable (observed and latent) impacting overall survival in patients.
+3) Build a predictive model to distinguish between primary and metastatic samples. 
+
+___
 
 | Sample Origin | Tissue | Sample Count |
 | --- | --- | --- |
