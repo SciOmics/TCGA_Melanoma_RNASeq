@@ -83,12 +83,15 @@ ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/singscore_primary_met.png?raw=true)  
 
-**Figure 7. Epithelial–Mesenchymal scores of primary vs. metastatic samples.**
+**Figure 7. Epithelial–Mesenchymal scores of primary vs. metastatic samples.** Singscore was used to generate a combined epithelial and mesenchymal gene signature score. Filtering down to only cutaneous samples, metastatic samples had a higher score (i.e. more mesenchymal-like) relative to primary samples. 
 
 ___
 
 
 **Figure 8. Overall survival by epithelial–mesenchymal score.**
+
+-median division, gmm division
+-all samples, cutaneous only, late stage only
 
 ___
 
