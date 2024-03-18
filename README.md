@@ -10,7 +10,7 @@ This repo is to demo analysis approaches for bulk RNA-seq data.
 | Metastatic | Mucosal | 3 |
 | Metastatic | Organ | 19 |
 | Primary | Cutaneous | 96 |
-| Primary | Lyphm Node | 1 |
+| Primary | Lymph Node | 1 |
 | Primary | Mucosal | 1 |
 
 
