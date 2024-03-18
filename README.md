@@ -47,7 +47,11 @@ There shouldn't be metastatic samples labeled Stage 0 or stage 1, and probably n
 
 **Figure 1. PCA plots of normalized expression**
 
-There is some seperation of primary vs. metastatic samples in PC1 and PC2, but this likely driven by the lymph node metastatic samples. 
+There is some seperation of primary vs. metastatic samples in PC1 and PC2. This is driven in part by the lymph node metastatic samplesm, but the metastatic cutaneous samples also seem to seperate. Let's plot just the cutaneous samples.
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plot_cutaneous.png?raw=true)  
+
+**Figure 2. PCA plot filtered to only cutanous samples**
 
 
 
