@@ -77,7 +77,7 @@ ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/Epi_Mes_scores.png?raw=true)  
 
-**Figure 6. Epithelial–Mesenchymal scores.** Samples were scored using epithelial and mesenchymal gene signatures from [Tan TZ, et al. EMBO Mol Med. 2014.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4287932/) (available in the references folder) by GSEA, ssGSEA, and SingScore. ssGSEA and Singscore produced highly similar results, with metastatic samples predominately being low in epithelial scores. GSVA scoring produced a wider spread in the epithelial scores of metastatic samples. 
+**Figure 6. Epithelial–Mesenchymal scores.** Samples were scored using epithelial and mesenchymal gene signatures from [Tan TZ, et al. EMBO Mol Med. 2014.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4287932/) (cleaned csv version available in the references folder) by GSEA, ssGSEA, and SingScore. ssGSEA and Singscore produced highly similar results, with metastatic samples predominately being low in epithelial scores. GSVA scoring produced a wider spread in the epithelial scores of metastatic samples. Likewise, primary samples scored low in the mesenchymal signature for ssGSEA and SingScore, but GSVA again had a wide spread. 
 
 ___
 
