@@ -169,7 +169,7 @@ ssgsea_results = merge(ssgsea_results,
 ## Plots
 ```{r}
 
-#png(filename = "../outputs/ssGSEA_EMT_plot.png", height = 800, width = 1000, res = 200)
+#png(filename = "../outputs/plots/ssGSEA_EMT_plot.png", height = 800, width = 1000, res = 200)
 ggplot(ssgsea_results, aes(x = patient_epi, y = patient_mes, color = tumor_descriptor)) +
   geom_point() +
   scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
@@ -212,7 +212,7 @@ ssgsea_results = ssgsea_results |>
 
 #Survival
 ssgsea_results |> 
-  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
+  dplyr::filter(tissue_rollup == "Cutaneous" & tumor_descriptor == "Metastatic") |> 
   survfit2(Surv(last_event, survial_censor) ~ patient_mes_gmm_group , data = _) |>
     ggsurvfit() +
     add_pvalue() +
@@ -220,7 +220,7 @@ ssgsea_results |>
 
 #Cox PH
 ssgsea_results |> 
-  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
+  dplyr::filter(tissue_rollup == "Cutaneous" & tumor_descriptor == "Metastatic") |> 
   coxph(Surv(last_event, survial_censor) ~ patient_mes_gmm_group, data = _)
 
 
@@ -240,31 +240,11 @@ ggplot(ssgsea_results, aes(x = patient_mes, fill = as.factor(patient_mes_divisio
   geom_density()
 
 ssgsea_results |> 
-  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
+  dplyr::filter(tissue_rollup == "Cutaneous" & tumor_descriptor == "Metastatic") |> 
   survfit2(Surv(last_event, survial_censor) ~ patient_mes_division , data = _) |>
     ggsurvfit() +
     add_pvalue() +
     add_risktable(risktable_stats = "n.risk")
-
-
-```
-
-```{r}
-
-summary(lm(patient_mes ~ year_of_diagnosis, data = ssgsea_results))
-
-ggplot(ssgsea_results, aes(x = year_of_diagnosis, y = patient_mes)) +
-  geom_point() +
-  geom_smooth(method = lm)
-
-coxph(Surv(last_event, survial_censor) ~ year_of_diagnosis, data = ssgsea_results)
-
-ssgsea_results |> 
-  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
-  ggplot(aes(x = year_of_diagnosis, y = last_event, color = as.factor(survial_censor))) +
-    geom_point() +
-    scale_color_manual(values = c("grey", "black")) +
-    geom_smooth(method = lm, linetype = "dashed", size = 0.5)
 
 
 ```
@@ -279,7 +259,7 @@ ggplot(ssgsea_results, aes(x = patient_epi, fill = as.factor(patient_epi_divisio
   geom_density()
 
 ssgsea_results |> 
-  dplyr::filter(tissue_rollup == "Cutanous" & tumor_descriptor == "Metastatic") |> 
+  dplyr::filter(tissue_rollup == "Cutaneous" & tumor_descriptor == "Metastatic") |> 
   survfit2(Surv(last_event, survial_censor) ~ patient_epi_division , data = _) |>
     ggsurvfit() +
     add_pvalue() +
@@ -329,8 +309,9 @@ ggplot(ss_patient_signature, aes(x = tumor_descriptor, y = TotalScore, color = t
 # add mean bar, p-value, 95% CI, number of samples per group, center title
 
 #Cutaneous sites only
+png(filename = "../outputs/plots/singscore_primary_met.png", height = 500, width = 700, res = 120)
 ss_patient_signature |> 
-  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
   ggplot(aes(x = tumor_descriptor, y = TotalScore, color = tumor_descriptor)) +
   geom_jitter(width = 0.2) +
   stat_summary(aes(group = tumor_descriptor), fun.y = mean, geom = 'crossbar', width = 0.3, color = "black") +
@@ -338,9 +319,10 @@ ss_patient_signature |>
   labs(x= "", y = "SingScore", title = "Patient Tumor Derived Signature - Only Cutaneous Samples", subtitle = "Higher Scores Correspond to More Mesenchymal Like") +
   theme_classic() +
   theme(legend.position = "none")
+dev.off()
 
 ss_patient_signature |> 
-  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
   ggplot(aes(x = ajcc_pathologic_stage, y = TotalScore, color = tumor_descriptor)) +
   geom_jitter(width = 0.2) +
   stat_summary(aes(group = tumor_descriptor), fun.y = mean, geom = 'crossbar', width = 0.3, color = "black") +
@@ -352,11 +334,13 @@ ss_patient_signature |>
 ```
 
 ## Survival
+
+### Divide by GMM
 ```{r}
 
-#filter to primary cutanoues
+#filtered to cutaneous only samples
 
-#divide into singscore high vs low; try using gmm
+#GMM division
 gmm_results = Mclust(ss_patient_signature$TotalScore)
 ss_patient_signature$gmm = gmm_results$classification
 
@@ -364,17 +348,32 @@ ggplot(ss_patient_signature, aes(x = TotalScore, fill = as.factor(gmm))) +
   geom_density()
 
 ss_patient_signature |> 
-  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
   survfit2(Surv(last_event, survial_censor) ~ gmm , data = _) |>
     ggsurvfit() +
     add_pvalue() +
     add_risktable(risktable_stats = "n.risk")
 
 
+```
 
+### Divide at Median
+```{r}
 
+ss_patient_signature = ss_patient_signature |> 
+  mutate(median_division = ifelse(TotalScore > median(TotalScore), "High", "Low"))
+
+ss_patient_signature |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
+  survfit2(Surv(last_event, survial_censor) ~ median_division , data = _) |>
+    ggsurvfit() +
+    add_pvalue() +
+    add_risktable(risktable_stats = "n.risk")
 
 ```
+
+
+
 # Make a dataframe of results
 ```{r}
 
@@ -400,20 +399,66 @@ colnames(gene_signature_results) = c("Sample_ID",
 ```
 
 
-# Correlations of different signature methods
+## Save Results
 ```{r}
 
-ggplot(gene_signature_results, aes(x = ssGSEA_patient_mes_score, y = SingScore_mes_score)) +
+write.csv(gene_signature_results, file = "../outputs/epi_mes_signature_scores.csv")
+
+```
+
+# Compare Methods
+
+## Epi vs. Mes Plots
+```{r}
+
+gsva_plot = ggplot(gsva_results, aes(x = patient_epi, y = patient_mes, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Epithelial", y = "Mesenchymal") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+ssGSEA_plot = ggplot(ssgsea_results, aes(x = patient_epi, y = patient_mes, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Epithelial", y = "Mesenchymal") +
+  theme_classic() +
+  theme(legend.position = "none") 
+
+singscore_plot = ggplot(ss_patient_signature, aes(x = -DownScore, y = UpScore, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Epithelial", y = "Mesenchymal") +
+  theme_classic()
+
+png(filename = "../outputs/plots/Epi_Mes_scores.png", height = 500, width = 1600, res = 100)
+ggarrange(gsva_plot, ssGSEA_plot, singscore_plot,
+          ncol = 3,
+          labels = c("     GSVA", "     ssGSEA", "     SingSCore"))
+dev.off()
+
+```
+
+# Correlation between epi mes scores
+```{r}
+
+ggplot(gene_signature_results, aes(x = SingScore_mes_score, y = SingScore_epi_score)) +
+  geom_point()
+
+ggplot(gene_signature_results, aes(x = ssGSEA_patient_mes_score, y = ssGSEA_patient_epi_score)) +
   geom_point()
 
 ```
 
 
-
-# Save Results
+# Correlations of different signature methods
 ```{r}
 
-write.csv(gene_signature_results, file = "../outputs/epi_mes_signature_scores.csv")
+ggplot(gene_signature_results, aes(x = ssGSEA_patient_epi_score, y = SingScore_epi_score)) +
+  geom_point()
+
+ggplot(gene_signature_results, aes(x = ssGSEA_patient_mes_score, y = SingScore_mes_score)) +
+  geom_point()
 
 ```
 
