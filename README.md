@@ -16,8 +16,8 @@ This repo is to demo analysis approaches for bulk RNA-seq data using data from T
 
 **Table 1. Summary of the number of sample from different tissue sites.**
 There shouldn't be "Primary" samples from non-cutaneous tissues. These are mislabeled and will be removed. 
-  
-  
+
+___
   
 | Stage | Primary Sample Count | Metastatic Sample Count |
 | --- | --- | --- |
@@ -38,17 +38,21 @@ There shouldn't be "Primary" samples from non-cutaneous tissues. These are misla
 **Table 2. Summary of the number of samples from disease stages.**
 There shouldn't be metastatic samples labeled Stage 0 or stage 1, and probably not stage 2 either. This is concerning. I could eliminate early stage samples, but this would substaintally lower our sample size. I'll leave these samples in for now and see how they related to other samples in a PCA. 
   
-  
+___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plots.png?raw=true)  
 
 **Figure 1. PCA plots of normalized expression**
 There is some seperation of primary vs. metastatic samples in PC1 and PC2. This is driven in part by the lymph node metastatic samples, but the metastatic cutaneous samples also seem to seperate. Let's plot just the cutaneous samples.
 
+___
+
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plot_cutaneous.png?raw=true)  
 
 **Figure 2. PCA plot filtered to only cutanous samples**
 There does indeed appear to be some seperating along PC1 and PC2, a maybe a bit in PC3. 
+
+___
 
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_plot_stage.png?raw=true)  
@@ -56,21 +60,31 @@ There does indeed appear to be some seperating along PC1 and PC2, a maybe a bit 
 **Figure 3. Overall survival by disease stage.**
 Overall survival probability gets shorter as disease stage increases. This is what I would expect, but it is a good sanity check of the data. 
 
+___
+
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/volcano_plot.png?raw=true)  
 
 **Figure 4. Volcano plot: primary vs. metastatic samples.**
 
+___
+
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/GSEA.png?raw=true)  
 
 **Figure 5. Gene set enrichment analysis: primary vs. metastatic samples.**
+
+___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/Epi_Mes_scores.png?raw=true)  
 
 **Figure 6. Epithelial–Mesenchymal scores.** Using epithelial and mesenchymal gene signatures from [Tan TZ, et al. EMBO Mol Med. 2014.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4287932/)
 
+___
 
-____________
+
+
+
+___
 
 ![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
 **Directed acyclic graph of hypothesized variables impacting patient overall survival**
