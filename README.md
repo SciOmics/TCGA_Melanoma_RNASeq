@@ -56,7 +56,7 @@ There is some seperation of primary vs. metastatic samples in PC1 and PC2. This 
 There does indeed appear to be some seperating along PC1 and PC2, a maybe a bit in PC3. 
 
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_plot_stage.png.png?raw=true)  
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_plot_stage.png?raw=true)  
 
 **Figure 3. Survival by disease stage.**
 
