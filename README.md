@@ -2,6 +2,18 @@ This repo is to demo analysis approaches for bulk RNA-seq data.
 \
 **Under Construction**
 
+| Sample Origin | Tissue | Sample Count |
+| --- | --- | --- |
+| Metastatic | CNS | 5 |
+| Metastatic | Cutaneous | 98 |
+| Metastatic | Lymph Node | 196 |
+| Metastatic | Mucosal | 3 |
+| Metastatic | Organ | 19 |
+| Metastatic | Cutaneous | 96 |
+| Metastatic | Lyphm Node | 1 |
+| Metastatic | Mucosal | 1 |
+
+
 ![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
 **Directed acyclic graph of hypothesized variables impacting patient overall survival**
   
@@ -19,3 +31,17 @@ This repo is to demo analysis approaches for bulk RNA-seq data.
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/boostedtree_ROC.png?raw=true)  
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/NN_ROC.png?raw=true)  
+
+
+
+| Sample Origin | Tissue | Sample Count |
+| --- | --- | --- |
+| Metastatic | CNS | 5 |
+| Metastatic | Cutaneous | 98 |
+| Metastatic | Lymph Node | 196 |
+| Metastatic | Mucosal | 3 |
+| Metastatic | Organ | 19 |
+| Metastatic | Cutaneous | 96 |
+| Metastatic | Lyphm Node | 1 |
+| Metastatic | Mucosal | 1 |
+
