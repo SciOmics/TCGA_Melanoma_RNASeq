@@ -38,6 +38,7 @@ rownames(counts) = SummarizedExperiment::rowData(tcga_data)@rownames
 
 ```
 
+
 # Remove samples that were filtered out in the sample metadata
 ```{r}
 
@@ -86,7 +87,6 @@ rm(list = c("filter_counts", "design_vector", "design_matrix"))
 # MDS Plot
 ```{r}
 
-
 plotMDS(dge,
         labels = sample_metadata$sample_id)
 
@@ -96,7 +96,7 @@ plotMDS(dge,
 ```{r}
 
 normalized_data = as.data.frame(t(voom_object$E)) |> 
-    merge(y = sample_metadata, by = "row.names") 
+    merge(y = sample_metadata, by.x = "row.names", by.y = "barcode") 
 
 rownames(normalized_data) = normalized_data$sample_id
 
