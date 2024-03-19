@@ -98,11 +98,34 @@ ___
 
 ___
 
-
 **Figure 8. Overall survival by epithelial–mesenchymal score.**
 
 -median division, gmm division
 -all samples, cutaneous only, late stage only
+
+___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolution_primary_vs_met.png?raw=true)  
+
+**Figure X.***
+
+___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolutions_survival.png?raw=true)  
+
+**Figure X.***
+
+___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_deconvolution_tumor.png?raw=true)  
+
+**Figure X.***
+
+___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolutions_other_cell_types.png?raw=true)  
+
+**Figure X.***
 
 ___
 
