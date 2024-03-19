@@ -70,8 +70,8 @@ ggplot(hard_threshold_signed$fitIndices, aes(x = Cut, y = `SFT.R.sq`)) +
   geom_point() +
   geom_hline(yintercept = 0.85, linetype = "dashed") 
 
-ggplot(soft_threshold_signed$fitIndices, aes(x = Power, y = `mean.k.`, lab = )) +
-  geom_point()
+# ggplot(soft_threshold_signed$fitIndices, aes(x = Power, y = `mean.k.`, lab = )) +
+#   geom_point()
 
 #hard_threshold = 0.65
 
@@ -130,7 +130,7 @@ plotDendroAndColors(modules$dendrograms[[1]], colors = modules$colors, dendroLab
 # Save WGCNA Object
 ```{r}
 
-# saveRDS(modules, file = "../outputs/wgcna_object.rds")
+saveRDS(modules, file = "../outputs/wgcna_object.rds")
 
 ```
 
@@ -339,6 +339,7 @@ gene_correlations_graph |>
     geom_node_point(aes(color = Module)) 
 
 ```
+
 ## Plotting function
 ```{r}
 
@@ -399,7 +400,7 @@ module_stats = annotated_me |>
 plot_modules = function(module_name){
   
   annotated_me |>
-    dplyr::filter(tissue_rollup == "Cutanous") |>
+    dplyr::filter(tissue_rollup == "Cutaneous") |>
     ggplot(aes(x = tumor_descriptor, y = .data[[module_name]], color = tumor_descriptor)) +
       geom_jitter(width = 0.2) +
       stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
@@ -412,6 +413,8 @@ plot_modules = function(module_name){
 
 ## Plots
 ```{r}
+
+module_names = colnames(annotated_me[1:17])
 
 #Primary vs mets
 lapply(module_names, plot_modules)
@@ -433,7 +436,6 @@ annotated_me |>
   summary()
 }
 
-module_names = colnames(annotated_me[1:17])
 survival_stats = lapply(module_names, survival_stats_function)
 names(survival_stats) = module_names
 
@@ -459,7 +461,7 @@ names(survival_stats) = module_names
 plot_survival = function(module_name){
   
   annotated_me |>
-    dplyr::filter(tissue_rollup == "Cutanous") |> 
+    dplyr::filter(tissue_rollup == "Cutaneous") |> 
     mutate(group = ifelse(.data[[module_name]] > median(.data[[module_name]]), "high", "low")) |> 
     survfit2(Surv(last_event, survial_censor) ~ group , data = _) |>
     ggsurvfit() +
@@ -478,7 +480,7 @@ plot_survival = function(module_name){
 #lapply(module_names, plot_survival)
 parallel::mclapply(module_names, 
                    plot_survival, 
-                   mc.cores = 54)
+                   mc.cores = 12)
 
 ```
 

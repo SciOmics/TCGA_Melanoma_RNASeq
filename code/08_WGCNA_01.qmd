@@ -1,0 +1,219 @@
+---
+title: "WGCNA: Generation (Part 1)"
+format: html
+---
+
+```{r}
+
+library(WGCNA)
+library(ggplot2)
+library(dplyr)
+library(doParallel)
+library(rstatix)
+library(clusterProfiler)
+library(survival)
+library(ggsurvfit)
+library(tidygraph)
+library(ggraph)
+library(data.table)
+library(parallel)
+library(corrplot)
+
+ggplot2::theme_set(ggplot2::theme_classic())
+
+enableWGCNAThreads()
+allowWGCNAThreads()
+
+```
+
+# Load data
+```{r}
+
+#normalized expression data
+source("functions/Load_Normalized_Expression.R")
+normalized_data = load_normalized_expression("../outputs/normalized_expression.csv")
+rm(load_normalized_expression)
+
+#sample metadata
+source("functions/Load_Sample_Metadata.R")
+sample_metadata = load_sample_metadata("../data/sample_metadata.csv")
+rm(load_sample_metadata)
+
+```
+
+# Data Quality Check
+```{r}
+
+data_quality_check = goodSamplesGenes(normalized_data)
+data_quality_check$allOK
+
+rm(data_quality_check)
+
+```
+
+# Sample Outlier Check
+```{r}
+
+plot(hclust(dist(normalized_data)))
+
+```
+
+
+# Hard thresholding
+```{r}
+
+hard_threshold_signed = pickHardThreshold(normalized_data, 
+                          dataIsExpr = TRUE)
+
+ggplot(hard_threshold_signed$fitIndices, aes(x = Cut, y = `SFT.R.sq`)) +
+  geom_point() +
+  geom_hline(yintercept = 0.85, linetype = "dashed") 
+
+# ggplot(soft_threshold_signed$fitIndices, aes(x = Power, y = `mean.k.`, lab = )) +
+#   geom_point()
+
+#hard_threshold = 0.65
+
+```
+
+# Soft thresholding
+
+## Signed network
+```{r}
+
+soft_threshold_signed = pickSoftThreshold(normalized_data,
+                                    networkType = "signed")
+
+ggplot(soft_threshold_signed$fitIndices, aes(x = Power, y = `SFT.R.sq`, lab = )) +
+  geom_point() +
+  geom_hline(yintercept = 0.85, linetype = "dashed") +
+  geom_vline(xintercept = 5, linetype = "dashed", size = 0.2)
+
+ggplot(soft_threshold_signed$fitIndices, aes(x = Power, y = `mean.k.`, lab = )) +
+  geom_point()
+
+#soft threshold = 6
+
+```
+
+## Unsigned network
+```{r}
+
+soft_threshold_unsigned = pickSoftThreshold(normalized_data,
+                                    networkType = "unsigned")
+
+ggplot(soft_threshold_unsigned$fitIndices, aes(x = Power, y = `SFT.R.sq`, lab = )) +
+  geom_point() +
+  geom_hline(yintercept = 0.85, linetype = "dashed") +
+  geom_vline(xintercept = 5, linetype = "dashed", size = 0.2)
+
+ggplot(soft_threshold_unsigned$fitIndices, aes(x = Power, y = `mean.k.`, lab = )) +
+  geom_point()
+
+
+```
+
+
+# Module detection
+```{r}
+
+modules = blockwiseModules(normalized_data,
+                 maxBlockSize = ncol(normalized_data),
+                 networkType = "signed",
+                 power = soft_threshold_signed$powerEstimate,
+                 randomSeed = 123)
+
+table(modules$colors)
+
+plotDendroAndColors(modules$dendrograms[[1]], colors = modules$colors, dendroLabels = FALSE)
+
+```
+
+
+## Save WGCNA Object
+```{r}
+
+saveRDS(modules, file = "../outputs/wgcna_object.rds")
+
+```
+
+
+## Save module eigenvalues
+```{r}
+
+write.csv(modules$MEs, file = "../outputs/wgcna_module_eigenvalues.csv")
+
+```
+
+
+# Genes in modules 
+```{r}
+
+#Create data frame with genes and corresponding module
+module_genes = as.data.frame(modules$colors)
+module_genes$ENSEMBL = row.names(module_genes)
+names(module_genes)[1] = "Module"
+
+#Add gene symbols
+module_genes$Symbol = AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db,
+                                            keys = module_genes$ENSEMBL,
+                                            column = "SYMBOL",
+                                            keytype = "ENSEMBL"
+                                            )
+
+#Add entrez ids
+module_genes$ncbi = AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db,
+                                            keys = module_genes$ENSEMBL,
+                                            column = "ENTREZID",
+                                            keytype = "ENSEMBL"
+                                            )
+
+```
+
+## Gene connectivity
+```{r}
+
+#Get connectivity
+connectivity_df = intramodularConnectivity.fromExpr(normalized_data, 
+                                  colors = modules$colors,
+                                  networkType = "signed")
+
+#add row names
+rownames(connectivity_df) = colnames(normalized_data)
+
+#merge with module gene info
+module_genes = merge(module_genes, connectivity_df, by = "row.names")
+rownames(module_genes) = module_genes$Row.names
+module_genes = module_genes[,-1]
+
+#clean up
+rm(connectivity_df)
+
+```
+
+
+## Save module gene dataframe
+```{r}
+
+write.csv(module_genes, file = "../outputs/wgcna_module_genes.csv")
+
+```
+
+
+# Hub Genes
+```{r}
+
+hub_genes = as.data.frame(chooseTopHubInEachModule(normalized_data,
+                         colorh = modules$colors))
+colnames(hub_genes) = "Top_Hub_Gene"
+
+```
+
+
+## Save hub genes
+```{r}
+
+write.csv(hub_genes, "../outputs/hub_genes.csv")
+
+```
+

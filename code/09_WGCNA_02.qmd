@@ -1,0 +1,406 @@
+---
+title: "WGCNA: Analysis (Part 2)"
+format: html
+---
+
+```{r}
+
+library(WGCNA)
+library(ggplot2)
+library(dplyr)
+library(doParallel)
+library(rstatix)
+library(clusterProfiler)
+library(survival)
+library(ggsurvfit)
+library(tidygraph)
+library(ggraph)
+library(data.table)
+library(parallel)
+library(corrplot)
+
+ggplot2::theme_set(ggplot2::theme_classic())
+
+enableWGCNAThreads()
+allowWGCNAThreads()
+
+```
+
+# Load data
+```{r}
+
+#normalized expression data
+source("functions/Load_Normalized_Expression.R")
+normalized_data = load_normalized_expression("../outputs/normalized_expression.csv")
+rm(load_normalized_expression)
+
+#sample metadata
+source("functions/Load_Sample_Metadata.R")
+sample_metadata = load_sample_metadata("../data/sample_metadata.csv")
+rm(load_sample_metadata)
+
+#WGCNA modules
+modules = readRDS("../outputs/wgcna_object.rds")
+
+#WGCNA module genes
+module_genes = read.csv("../outputs/wgcna_module_genes.csv")
+row.names(module_genes) = module_genes$X
+module_genes = module_genes[,-1]
+
+#WGCNA eigenvales
+# module_eigenvalues = read.csv("../outputs/wgcna_module_eigenvalues.csv")
+# row.names(module_eigenvalues) = module_eigenvalues$X
+# module_eigenvalues = module_eigenvalues[,-1]
+
+#WGCNA annotated eigenvalues
+annotated_me = merge(modules$MEs, sample_metadata, by.x = "row.names", by.y = "sample_id")
+rownames(annotated_me) = annotated_me$Row.names
+annotated_me = annotated_me[,c(-1)]
+
+```
+
+
+# Heatmaps
+
+## Modules vs Samples
+```{r}
+
+#Modules vs Samples
+#png(filename = "../outputs/WGCNA_module_sample_heatmap.png", height = 1200, width = 800, res = 120)
+annotated_me |> 
+  dplyr::select(starts_with("ME")) |> 
+  as.matrix() |> 
+  heatmap(scale = "column", labRow = annotated_me$tumor_descriptor)
+#dev.off()
+
+```
+
+## Genes in Modules
+
+### Plotting function
+```{r}
+
+module_gene_heatmap = function(module){
+  
+  temp = module_genes |> 
+  dplyr::filter(Module == module) 
+
+  temp = normalized_data[,colnames(normalized_data) %in% temp$ENSEMBL]
+  temp = merge(dplyr::select(annotated_me, tumor_descriptor), temp, by = "row.names")
+
+  heatmap(as.matrix(t(temp[,3:ncol(temp)])),
+        labRow = rownames(t(temp)),
+        labCol = temp$tumor_descriptor,
+        main = module)
+}
+
+```
+
+
+### Plots
+```{r}
+
+lapply(unique(module_genes$Module), module_gene_heatmap)
+
+rm(module_gene_heatmap)
+
+```
+
+
+# Hub Genes
+
+## Plotting function
+```{r}
+ 
+#Plotting function
+module_gene_correlation_plot = function(module, gene) {
+  
+  #module = paste0("ME", module)
+  
+  normalized_data |> 
+  merge(annotated_me, by = "row.names") |> 
+  ggplot(aes(x = .data[[module]], y = .data[[gene]])) +
+    geom_point() +
+    geom_smooth(method = "lm")
+}
+
+#Test
+# module_gene_correlation_plot("ENSG00000178363", "MEblack")
+
+```
+
+## Plots
+```{r}
+
+hub_genes = read.csv("../outputs/hub_genes.csv")
+
+for (module in hub_genes$X){
+  #need to add "ME" to front of module name
+  MEmodule = paste0("ME",module)
+  #find hub gene that corresponds to module
+  hub_gene = hub_genes[hub_genes$X == module, 2]
+  plot = module_gene_correlation_plot(MEmodule, gene = hub_gene)
+  print(plot)
+}
+
+rm(list = c("module_gene_correlation_plot", "hub_genes", "hub_gene", "MEmodule", "module", "plot"))
+
+```
+
+# Module pathway analysis
+
+## Function
+```{r}
+
+module_enrichment = function(module) {
+  module_genes |> 
+  filter(Module == module) |> 
+  pull(ncbi) |> 
+  na.omit() |> 
+  enrichGO(OrgDb = org.Hs.eg.db::org.Hs.eg.db,
+           ont = "ALL") |> 
+  dotplot() + ggtitle(module)
+}
+
+```
+
+
+## Plots
+```{r}
+
+parallel::mclapply(unique(module_genes$Module), 
+                   module_enrichment, 
+                   mc.cores = 12)
+
+rm(module_enrichment)
+
+```
+
+# Primary vs metastatic samples
+
+## Statistics
+```{r}
+
+#Primary vs Mets
+module_stats = annotated_me |> 
+  dplyr::select(starts_with("ME"), tumor_descriptor) |> 
+  tidyr::pivot_longer(cols = contains("ME"), names_to = "Module", values_to = "Value") |> 
+  group_by(Module) |> 
+  t_test(Value ~ tumor_descriptor) |> 
+  adjust_pvalue(method = "BH")
+
+
+```
+
+## Plotting function
+```{r}
+
+plot_modules = function(module_name){
+  
+  pval = module_stats[module_stats$Module == module_name, "p.adj"]
+  
+  annotated_me |>
+    dplyr::filter(tissue_rollup == "Cutaneous") |>
+    ggplot(aes(x = tumor_descriptor, y = .data[[module_name]], color = tumor_descriptor)) +
+      geom_jitter(width = 0.2) +
+      stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
+      stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
+      theme(legend.position = "none") +
+      annotate("text", x = 2.5, y = 0, label = paste0("adj p-val:\n", round(pval, 4)))
+
+}
+
+```
+
+## Plots
+```{r}
+
+lapply(colnames(annotated_me[1:17]), plot_modules)
+
+rm(plot_modules)
+
+```
+
+
+# Survival Analysis
+
+## Statistics
+```{r}
+
+#Function for doing survival analysis on module
+survival_stats_function = function(module){
+annotated_me |>
+  dplyr::select(starts_with("ME"), last_event, survial_censor) |>
+  tidyr::pivot_longer(cols = contains("ME"), names_to = "Module", values_to = "Value") |>
+  dplyr::filter(Module == module) |>
+  mutate(ME_division = ifelse(Value > median(Value), "high", "low")) |>
+  survival::coxph((Surv(last_event, survial_censor) ~ ME_division), data = _) |> 
+  summary()
+}
+
+#Run stats on all modules
+survival_stats = lapply(colnames(annotated_me[1:17]), survival_stats_function)
+names(survival_stats) = colnames(annotated_me[1:17])
+
+#clean up
+rm(survival_stats_function)
+
+```
+
+
+## Plotting function
+```{r}
+
+
+#Survival
+plot_survival = function(module_name){
+  
+  annotated_me |>
+    dplyr::filter(tissue_rollup == "Cutaneous") |> 
+    mutate(group = ifelse(.data[[module_name]] > median(.data[[module_name]]), "high", "low")) |> 
+    survfit2(Surv(last_event, survial_censor) ~ group , data = _) |>
+    ggsurvfit() +
+      add_risktable(risktable_stats = "n.risk") +
+      add_pvalue() +
+      ggtitle(module_name)
+
+}
+
+```
+
+
+## Plots
+```{r}
+
+lapply(colnames(annotated_me[1:17]), plot_survival)
+
+rm(plot_survival)
+
+```
+
+
+## Mutivariable Models
+```{r}
+
+survival_models = list()
+
+#Module with only intercept
+survival_models$intercept_only = survival::coxph(Surv(last_event, survial_censor) ~ 1, data = annotated_me)
+
+
+#Model with all modules
+survival_models$full_model = survival::coxph(Surv(last_event, survial_censor) ~ MEblue + MEturquoise + MEyellow + MEgreen + MEmagenta + MEbrown + MEsalmon + MElightcyan + MEblack + MEgreenyellow + MEred + MEmidnightblue + MEtan + MEcyan + MEpink + MEpurple + MEgrey, data = annotated_me)
+
+#Step-wise variable selection
+StepReg::stepwiseCox(Surv(last_event, survial_censor) ~  MEblue + MEturquoise + MEyellow + MEgreen + MEmagenta + MEbrown + MEsalmon + MElightcyan + MEblack + MEgreenyellow + MEred + MEmidnightblue + MEtan + MEcyan + MEpink + MEpurple + MEgrey, 
+                     data = annotated_me, 
+                     selection = "score",
+                     select = "AIC")
+
+#Best model
+survival_models$optimized_model = survival::coxph(Surv(last_event, survial_censor) ~ MEyellow + MEgreen + MEmagenta + MEsalmon + MEblack + MEcyan, data = annotated_me)
+summary(survival_models$optimized_model)
+
+#AIC values
+extractAIC(survival_models$intercept_only)
+extractAIC(survival_models$full_model)
+extractAIC(survival_models$optimized_model)
+
+#BIC values
+BIC(survival_models$intercept_only)
+BIC(survival_models$full_model)
+BIC(survival_models$optimized_model)
+
+```
+
+
+# EMT signature enrichment
+
+## Import signatures
+```{r}
+
+
+
+```
+
+
+## Function
+```{r}
+
+module_enrichment = function(signature) {
+  enricher(gene = signatures[[signature]],
+           TERM2GENE = enricher_modules,
+           maxGSSize = 100000)
+}
+
+```
+
+
+## Results
+```{r}
+
+##WHERE IS "SIGNATURS" COMING FROM?##
+
+enricher_results = lapply(names(signatures), module_enrichment)
+#add names to results list
+names(enricher_results) = names(signatures)
+
+```
+
+
+```{r}
+
+##CLEAN THIS UP##
+
+#Function
+module_enrichment = function(signature) {
+  enricher(gene = signatures[[signature]],
+           TERM2GENE = enricher_modules,
+           maxGSSize = 100000)
+}
+
+enricher_results = lapply(names(signatures), module_enrichment)
+#add names to results list
+names(enricher_results) = names(signatures)
+
+
+
+
+
+
+enricher_results_df = data.frame()
+
+for(signature in names(enricher_results)){
+  temp = enricher_results[[signature]]@result
+  temp[["Signature"]] = signature
+  enricher_results_df = rbind(enricher_results_df, temp)
+}
+
+
+enricher_results_df_pval = enricher_results_df |> 
+  tidyr::pivot_wider(names_from = Signature, values_from = p.adjust, id_cols = ID)
+
+rownames(enricher_results_df_pval) = enricher_results_df_pval$ID
+
+enricher_results_df_pval[,2:7] = 1 - enricher_results_df_pval[,2:7]
+#need to invert p-values
+
+enricher_results_df_pval[is.na(enricher_results_df_pval)] = 0
+
+
+#png(filename = "../outputs/cell_types_in_WGCNA_modules.png")
+heatmap(as.matrix(enricher_results_df_pval[,2:7]),
+        labRow = enricher_results_df_pval$ID,
+        scale = "none",
+        Rowv = NA,
+        Colv = NA,
+        main = "Epi/Mes Enrichment in WGCNA Modules")
+#dev.off()
+
+#need a legend
+
+##CORRELATIONS##
+
+```
+
+
