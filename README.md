@@ -7,6 +7,11 @@ Goals:
 2) Determine variables (observed and latent) impacting overall survival in patients.
 3) Build a predictive model to distinguish between primary and metastatic samples. 
 
+Approaches:
+1) Differential expression analysis.
+2) Epithelial–Mesenchymal gene signature scoring.
+3) Weighted gene coexpression network analysis (WGCNA)
+4) Deconvolution of cell types.
 ___
 
 | Sample Origin | Tissue | Sample Count |
