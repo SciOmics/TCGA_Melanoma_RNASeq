@@ -111,7 +111,7 @@ ___
 
 ___
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolutions_survival.png?raw=true)  
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolution_survival.png?raw=true)  
 
 **Figure X.***
 
