@@ -314,12 +314,12 @@ BIC(survival_models$optimized_model)
 ```
 
 
-# EMT signature enrichment
+# Cell types signature enrichment
 
 ## Import signatures
 ```{r}
 
-
+cell_signatures = as.list(read_excel("../references/Cell_type_Signatures.xlsx"))
 
 ```
 
@@ -328,7 +328,7 @@ BIC(survival_models$optimized_model)
 ```{r}
 
 module_enrichment = function(signature) {
-  enricher(gene = signatures[[signature]],
+  enricher(gene = cell_signatures[[signature]],
            TERM2GENE = enricher_modules,
            maxGSSize = 100000)
 }
@@ -339,11 +339,9 @@ module_enrichment = function(signature) {
 ## Results
 ```{r}
 
-##WHERE IS "SIGNATURS" COMING FROM?##
-
-enricher_results = lapply(names(signatures), module_enrichment)
+enricher_results = lapply(names(cell_signatures), module_enrichment)
 #add names to results list
-names(enricher_results) = names(signatures)
+names(enricher_results) = names(cell_signatures)
 
 ```
 
@@ -404,3 +402,91 @@ heatmap(as.matrix(enricher_results_df_pval[,2:7]),
 ```
 
 
+# ...
+
+## Retreive cell signatures
+```{r}
+
+cell_signatures = as.list(readxl::read_excel("../references/Cell_type_Signatures.xlsx"))
+cell_signatures = lapply(cell_signatures, function(x) x[!is.na(x)])
+
+```
+
+
+## Data frame of module genes
+```{r}
+
+#Import WGCNA module genes
+module_genes = read.csv("../outputs/wgcna_module_genes.csv")
+row.names(module_genes) = module_genes$X
+module_genes = module_genes[,-1]
+
+#Make a data frame of custom enricher terms for modules
+enricher_modules = module_genes |> 
+  dplyr::select(Module, Symbol)
+#rename columns to play nice with enricher
+colnames(enricher_modules) = c("TermID", "geneID")
+
+
+```
+
+## Function
+```{r}
+
+#Function
+module_enrichment = function(signature) {
+  enricher(gene = cell_signatures[[signature]],
+           TERM2GENE = enricher_modules,
+           maxGSSize = 100000)
+}
+
+
+```
+
+
+## Cell Signature Enrichments
+```{r}
+
+enricher_results = lapply(names(cell_signatures), module_enrichment)
+#add names to results list
+names(enricher_results) = names(cell_signatures)
+
+```
+
+
+## Plots
+```{r}
+
+enricher_results_df = data.frame()
+
+for(cell_signature in names(enricher_results)){
+  temp = enricher_results[[cell_signature]]@result
+  temp[["Cell_Type"]] = cell_signature
+  enricher_results_df = rbind(enricher_results_df, temp)
+}
+
+
+enricher_results_df_pval = enricher_results_df |> 
+  tidyr::pivot_wider(names_from = Cell_Type, values_from = p.adjust, id_cols = ID)
+
+rownames(enricher_results_df_pval) = enricher_results_df_pval$ID
+
+enricher_results_df_pval[,2:14] = 1 - enricher_results_df_pval[,2:14]
+#need to invert p-values
+
+enricher_results_df_pval[is.na(enricher_results_df_pval)] = 0
+
+
+#png(filename = "../outputs/cell_types_in_WGCNA_modules.png")
+heatmap(as.matrix(enricher_results_df_pval[,2:14]),
+        labRow = enricher_results_df_pval$ID,
+        scale = "none",
+        Rowv = NA,
+        Colv = NA,
+        main = "Cell Signature Enrichment in WGCNA Modules")
+#dev.off()
+
+#need a legend
+
+
+```
