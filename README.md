@@ -4,7 +4,7 @@ This repo is to demo analysis approaches for bulk RNA-seq data using data from T
 
 Goals: 
 1) Contrast primary vs metastatic samples. 
-2) Determine variable (observed and latent) impacting overall survival in patients.
+2) Determine variables (observed and latent) impacting overall survival in patients.
 3) Build a predictive model to distinguish between primary and metastatic samples. 
 
 ___
@@ -55,7 +55,7 @@ ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plot_cutaneous.png?raw=true)  
 
-**Figure 2. PCA plot filtered to only cutanous samples**
+**Figure 2. PCA plot filtered to only cutaneous samples**
 There does indeed appear to be some seperating along PC1 and PC2, and maybe a bit in PC3. 
 
 ___
@@ -64,7 +64,7 @@ ___
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_plot_stage.png?raw=true)  
 
 **Figure 3. Overall survival by disease stage.**
-Overall survival probability gets shorter as disease stage increases. This is what I would expect, but it is a good sanity check of the data. 
+Survival probability gets shorter as disease stage increases. This is what I would expect, but it is a good sanity check of the data. 
 
 ___
 
