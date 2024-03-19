@@ -124,6 +124,14 @@ ___
 
 ___
 
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolution_forest_plot.png?raw=true)  
+
+**Figure X.***
+
+___
+
+
 ![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
 **Directed acyclic graph of hypothesized variables impacting patient overall survival**
   
