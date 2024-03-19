@@ -117,11 +117,6 @@ ___
 
 ___
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_deconvolution_tumor.png?raw=true)  
-
-**Figure X.***
-
-___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolutions_other_cell_types.png?raw=true)  
 
