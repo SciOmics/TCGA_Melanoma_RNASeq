@@ -572,7 +572,6 @@ extractAIC(survival_models$optimized_model)
 
 ```
 
-# ...
 
 ## Correlations with WGCNA Modules - IN PROGRESS
 
@@ -619,6 +618,9 @@ module_cell_type_correlations = module_cell_type_correlations |>
   dplyr::filter(!(name %in% module_names)) |> 
   dplyr::filter(module_name %in% module_names)
 
+#clean up 
+rm(module_names)
+
 ```
 
 ### Correlations Heatmap
@@ -658,9 +660,12 @@ ggarrange(p1, p2, p3,
           ncol = 3)
 dev.off()
 
+#clean up
+rm(list = c("p1", "p2", "p3"))
+
 ```
 
-
+# ... To Do: ...
 
 # XCell
 
