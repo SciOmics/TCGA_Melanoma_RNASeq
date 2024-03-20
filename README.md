@@ -132,27 +132,46 @@ ___
 ___
 
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolutions_other_cell_types_examples.png?raw=true)  
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/dmodule_deconvolution_correlations_examples.png?raw=true)  
 
 **Figure X.***
 
 ___
 
 ![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
-**Directed acyclic graph of hypothesized variables impacting patient overall survival**
+
+**Figure X. Directed acyclic graph of hypothesized variables impacting patient overall survival**
+
+___
   
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/cell_types_in_WGCNA_modules.png?raw=true)  
-**Enrichment for cell type gene signatures  in WGCNA modules**
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/cell_types_in_WGCNA_modules.png?raw=true) 
+
+**Figure x. Enrichment for cell type gene signatures  in WGCNA modules**
+
+___
   
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/module_deconvolution_correlations.png?raw=true)  
-**Correlations between deconvolution cell frequencies and WGCNA module eigen values.**
-  
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/yellow_module_survival.png?raw=true)  
-**Unadjusted survival curves for WGCNA yellow module eigen values.**
-  
 
+**Correlations between deconvolution cell frequencies and WGCNA module eigen values.**
+
+___
+  
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/yellow_module_survival.png?raw=true) 
+
+**Unadjusted survival curves for WGCNA yellow module eigen values.**
+
+___
+  
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/boostedtree_ROC.png?raw=true)  
 
+**Figure X.**
+
+___
+
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/NN_ROC.png?raw=true)  
+
+**Figure X.**
+
+___
 
