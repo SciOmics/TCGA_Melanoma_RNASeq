@@ -11,6 +11,7 @@ library(EnhancedVolcano)
 library(AnnotationDbi)
 library(org.Hs.eg.db)
 library(limma)
+library(ggpubr)
 
 ```
 
@@ -79,6 +80,38 @@ EnhancedVolcano(diff_exp_table,
 dev.off()
 
 #Are the values in logFC base 10? 
+
+```
+
+
+# Individual gene plots
+
+```{r}
+
+normalized_data = normalized_data |> 
+  merge(sample_metadata, by.x = "row.names", by.y = "sample_id")
+
+```
+
+```{r}
+
+#KRT6B
+p1 = ggplot(normalized_data, aes(x = tumor_descriptor, y = ENSG00000185479, color = tumor_descriptor)) +
+  geom_jitter(width = 0.2) +
+  stat_summary(fun = "mean", geom = "crossbar", width = 0.3, color = "black") +
+  labs(title = "Normalized Expression", x = "", y = "KRT6B") +
+  theme(legend.position = "none")
+
+#KRT6B
+p2 = ggplot(normalized_data, aes(x = tumor_descriptor, y = ENSG00000112936, color = tumor_descriptor)) +
+  geom_jitter(width = 0.2) +
+  stat_summary(fun = "mean", geom = "crossbar", width = 0.3, color = "black") +
+  labs(x = "", y = "C7") +
+  theme(legend.position = "none")
+
+png(filename = "../outputs/plots/gene_expression_plots.png", height = 400, width = 700, res = 120)
+ggarrange(p1, p2)
+dev.off()
 
 ```
 
