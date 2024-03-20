@@ -102,6 +102,29 @@ rm(list = c("list_columns", "exclude_columns"))
 
 ## Check samples
 
+### Duplicate samples
+```{r}
+
+#check for patients with more than one sample
+multiple_samples = data.frame(table(sample_metadata$patient)) |> 
+    #arrange(desc(Freq)) |> 
+    dplyr::filter(Freq > 1)
+
+multiple_samples
+
+```
+
+#### Info on duplicate samples
+```{r}
+
+sample_metadata |> 
+    dplyr::filter(patient %in% multiple_samples$Var1) |> 
+    dplyr::select(sample_id, patient, tumor_descriptor, tissue_or_organ_of_origin, ajcc_pathologic_stage) |> 
+    arrange(patient)
+
+```
+
+
 ### Tissue site vs. Primary/Metastatic
 ```{r}
 
