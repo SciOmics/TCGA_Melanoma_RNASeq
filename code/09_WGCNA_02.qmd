@@ -379,11 +379,11 @@ for(cell_signature in names(enricher_results)){
 ### Heatmap
 ```{r}
 
-png(filename = "../outputs/plots/cell_types_in_WGCNA_modules.png", height = 400, width = 600, res = 120)
+png(filename = "../outputs/plots/cell_types_in_WGCNA_modules.png", height = 600, width = 1000, res = 200)
 ggplot(enricher_results_df, aes(x = Cell_Type, y = ID)) +
   geom_tile(aes(fill = `p.adjust`)) +
   scale_fill_gradient(low = "red", high = "white") +
-  labs(x = "Cell Signature", y = "WGCNA Module", fill = "Adjusted P-Value", title = "Enrichment of Cell Signatures in\nWGCNA Modules") + 
+  labs(x = "Cell Signature", y = "WGCNA Module", fill = "Adjusted\nP-Value", title = "Enrichment of Cell Signatures in\nWGCNA Modules") + 
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 
 ```
