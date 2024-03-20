@@ -229,6 +229,21 @@ dev.off()
 ```
 
 
+### Subset samples to more recent samples
+```{r}
+
+ggplot(sample_metadata, aes(x = year_of_diagnosis)) +
+    geom_histogram(bins = 20, fill = "black") +
+    scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
+    labs(title = "Distribution of years of patient diagnosis", x = "Year of Diagnosis")
+
+#no samples past 2012
+sample_metadata |> 
+    dplyr::filter(year_of_diagnosis > 2013)
+
+```
+
+
 ## Race
 ```{r}
 
