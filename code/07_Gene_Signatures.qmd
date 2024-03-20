@@ -309,7 +309,7 @@ ggplot(ss_patient_signature, aes(x = tumor_descriptor, y = TotalScore, color = t
 # add mean bar, p-value, 95% CI, number of samples per group, center title
 
 #Cutaneous sites only
-png(filename = "../outputs/plots/singscore_primary_met.png", height = 500, width = 700, res = 120)
+#png(filename = "../outputs/plots/singscore_primary_met.png", height = 500, width = 700, res = 120)
 ss_patient_signature |> 
   dplyr::filter(tissue_rollup == "Cutaneous") |> 
   ggplot(aes(x = tumor_descriptor, y = TotalScore, color = tumor_descriptor)) +
@@ -319,7 +319,7 @@ ss_patient_signature |>
   labs(x= "", y = "SingScore", title = "Patient Tumor Derived Signature - Only Cutaneous Samples", subtitle = "Higher Scores Correspond to More Mesenchymal Like") +
   theme_classic() +
   theme(legend.position = "none")
-dev.off()
+#dev.off()
 
 ss_patient_signature |> 
   dplyr::filter(tissue_rollup == "Cutaneous") |> 
@@ -335,24 +335,60 @@ ss_patient_signature |>
 
 ## Survival
 
-### Divide by GMM
+### Continuous
 ```{r}
 
-#filtered to cutaneous only samples
+#Cox regression results treating score as continuous
+cox_results = sample_metadata |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
+  coxph(Surv(last_event, survial_censor) ~ age_at_index , data = _) |> 
+  summary()
+
+png(filename = "../outputs/plots/survival_by_singscore.png", height = 400, width = 800, res = 120)
+ss_patient_signature |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
+  ggplot(aes(x = TotalScore, y = last_event, color = as.factor(survial_censor))) +
+  geom_point() +
+  scale_color_manual(values = c("grey", "black"),labels = c('Censored', 'Not Censored')) +
+  labs(color = "", y = "Days from index", x = "SingScore", title = "Overall Survival by Epithelial–Mesenchymal Score", subtitle = "filtered to cutaneous samples") +
+  annotate("text", x = 0, y = 9000, label = paste0("HR: ", round(cox_results$coefficients[2], 4), "\np-value: ", round(cox_results$coefficients[5], 5)))
+dev.off()
+
+#clean up
+rm(cox_results)
+
+```
+
+
+### Divide by GMM
+```{r}
 
 #GMM division
 gmm_results = Mclust(ss_patient_signature$TotalScore)
 ss_patient_signature$gmm = gmm_results$classification
 
-ggplot(ss_patient_signature, aes(x = TotalScore, fill = as.factor(gmm))) +
-  geom_density()
+p2 = ggplot(ss_patient_signature, aes(x = TotalScore, fill = as.factor(gmm))) +
+  geom_density() +
+  scale_fill_manual(values = palette_discrete[c(5,1)],labels = c('Low', 'High')) +
+  labs(x = "SingScore Value", y = "Density", title = "Gaussian Mixture Model Grouping") +
+  theme(legend.position = "none")
 
-ss_patient_signature |> 
+p2
+
+p3 = ss_patient_signature |> 
   dplyr::filter(tissue_rollup == "Cutaneous") |> 
   survfit2(Surv(last_event, survial_censor) ~ gmm , data = _) |>
-    ggsurvfit() +
+  ggsurvfit() +
     add_pvalue() +
-    add_risktable(risktable_stats = "n.risk")
+    add_risktable(risktable_stats = "n.risk") + 
+    scale_color_manual(values = palette_discrete[c(5,1)],labels = c('Low', 'High')) +
+    ggtitle("EM SingScore", subtitle = "Stratified by GMM\nFiltered to cutaneous samples")
+  
+p3
+
+png(filename = "../outputs/plots/survival_by_singscore_gmm.png", height = 400, width = 1000, res = 120)
+ggarrange(p2, p3)
+dev.off()
 
 
 ```
@@ -366,12 +402,13 @@ ss_patient_signature = ss_patient_signature |>
 ss_patient_signature |> 
   dplyr::filter(tissue_rollup == "Cutaneous") |> 
   survfit2(Surv(last_event, survial_censor) ~ median_division , data = _) |>
-    ggsurvfit() +
+  ggsurvfit() +
     add_pvalue() +
-    add_risktable(risktable_stats = "n.risk")
+    add_risktable(risktable_stats = "n.risk") + 
+    scale_color_manual(values = palette_discrete[c(5,1)],labels = c('Low', 'High')) +
+    ggtitle("EM SingScore", subtitle = "Stratified at median\nFiltered to cutaneous only samples")
 
 ```
-
 
 
 # Make a dataframe of results

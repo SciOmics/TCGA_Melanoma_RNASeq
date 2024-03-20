@@ -140,10 +140,10 @@ ___
 
 ___
 
-**Figure 8. Overall survival by epithelial–mesenchymal score.**
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_by_singscore.png?raw=true)  
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_by_singscore_gmm.png?raw=true)  
 
--median division, gmm division
--all samples, cutaneous only, late stage only
+**Figure 8. Overall survival by epithelial–mesenchymal score.**
 
 ___
 
