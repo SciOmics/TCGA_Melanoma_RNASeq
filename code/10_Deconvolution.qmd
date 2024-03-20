@@ -10,6 +10,7 @@ library(ggplot2)
 library(data.table)
 library(dplyr)
 library(survival)
+library(ggpubr)
 
 # set_cibersort_binary("/Users/david/Library/Mobile Documents/com~apple~CloudDocs/Documents/Informatics/CIBERSORT/CIBERSORT.R")
 # set_cibersort_mat("/Users/david/Library/Mobile Documents/com~apple~CloudDocs/Documents/Informatics/CIBERSORT/LM22.txt")
@@ -92,6 +93,25 @@ deconvolutions$estimate = as.data.frame(t(deconvolute_results_estimate))
 colnames(deconvolutions$estimate) = deconvolutions$estimate[1,]
 deconvolutions$estimate = deconvolutions$estimate[2:nrow(deconvolutions$estimate),]
 
+#clean up
+rm(list = c("deconvolute_results_epic", "deconvolute_results_estimate", "deconvolute_results_quantiseq"))
+
+```
+
+
+##Save
+```{r}
+
+#estimate
+write.csv(deconvolutions$estimate, file = "../outputs/deconvolution_estimate.csv")
+
+#epic
+write.csv(deconvolutions$epic, file = "../outputs/deconvolution_epic.csv")
+
+#quantiseq
+write.csv(deconvolutions$quantiseq, file = "../outputs/deconvolution_quantiseq.csv")
+
+
 ```
 
 
@@ -107,98 +127,119 @@ tumor_purity = data.frame(sample = row.names(deconvolutions$epic),
 #Add mean
 tumor_purity$methods_mean = rowMeans(tumor_purity[,2:4])
 
-#clean up
-rm(list = c("deconvolute_results_epic", "deconvolute_results_estimate", "deconvolute_results_quantiseq"))
+#add sample metadata
+tumor_purity = merge(sample_metadata, tumor_purity[,c("sample", "methods_mean")], by.x = "sample_id", by.y = "sample")
 
 ```
+
 
 ## Plots comparing methods
 ```{r}
 
-ggplot(tumor_purity, aes(x = epic, y = quantiseq)) +
+p1 = ggplot(tumor_purity, aes(x = epic, y = quantiseq)) +
   geom_point() +
-  geom_smooth(method= "lm")
+  geom_smooth(method= "lm") +
+  xlim(0,1) +
+  ylim(0,1)
 
-ggplot(tumor_purity, aes(x = epic, y = estimate)) +
+p2 = ggplot(tumor_purity, aes(x = epic, y = estimate)) +
   geom_point() +
-  geom_smooth(method= "lm")
+  geom_smooth(method= "lm") +
+  xlim(0,1) +
+  ylim(0,1)
 
-ggplot(tumor_purity, aes(x = estimate, y = quantiseq)) +
+p3 = ggplot(tumor_purity, aes(x = estimate, y = quantiseq)) +
   geom_point() +
-  geom_smooth(method= "lm")
+  geom_smooth(method= "lm") +
+  xlim(0,1) +
+  ylim(0,1)
 
-ggplot(tumor_purity, aes(x = methods_mean, y = epic)) +
-  geom_point() +
-  geom_smooth(method= "lm")
+# ggplot(tumor_purity, aes(x = methods_mean, y = epic)) +
+#   geom_point() +
+#   geom_smooth(method= "lm")
+# 
+# ggplot(tumor_purity, aes(x = methods_mean, y = quantiseq)) +
+#   geom_point() +
+#   geom_smooth(method= "lm")
+# 
+# ggplot(tumor_purity, aes(x = methods_mean, y = estimate)) +
+#   geom_point() +
+#   geom_smooth(method= "lm")
 
-ggplot(tumor_purity, aes(x = methods_mean, y = quantiseq)) +
-  geom_point() +
-  geom_smooth(method= "lm")
+#png(filename = "../outputs/plots/deconvolutions_other_cell_types.png", height = 400, width = 1200, res = 120)
+ggarrange(p1, p3, p2,
+          ncol = 3)
+#dev.off()
 
-ggplot(tumor_purity, aes(x = methods_mean, y = estimate)) +
-  geom_point() +
-  geom_smooth(method= "lm")
+#clean up
+rm(list = c("p1", "p2", "p3"))
 
 ```
 
-## Add to sample metadata
+
+## Primary vs Metastatic Plot
 ```{r}
 
-sample_metadata = merge(sample_metadata, tumor_purity[,c("sample", "methods_mean")], by.x = "sample_id", by.y = "sample")
-
-#Chamge column name
-# names(sample_metadata[,"methods_mean"]) = "tumor_purity"
-
-```
-
-## Plots
-```{r}
-
-#Site: Primary vs. Metastatic
-sample_metadata |> 
+png(filename = "../outputs/plots/primary_vs_met_deconvolution_tumor.png", height = 400, width = 500, res = 120)
+tumor_purity |> 
   ggplot(aes(x = tumor_descriptor, y = methods_mean, color = tumor_descriptor)) +
     geom_jitter(width = 0.2) +
     stat_summary(fun = mean, geom = "crossbar", width = 0.3, linewidth = 0.3, color = "black") +
     stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, linewidth = 0.3, color = "black") +
-    theme(legend.position = "none")
+    theme(legend.position = "none") +
+    xlab("") +
+    ylab("Average Frequency of\nOther Cell Type")
+dev.off()
 
-#By Stage
-ggplot(sample_metadata, aes(x = ajcc_pathologic_stage, y = methods_mean, color = ajcc_pathologic_stage)) +
+```
+
+
+## By disease stage plot
+```{r}
+
+ggplot(tumor_purity, aes(x = ajcc_pathologic_stage, y = methods_mean, color = ajcc_pathologic_stage)) +
   geom_jitter(width = 0.2) +
   stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
   stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
   labs(x = "Stage", y = "Percent Tumor") +
   theme(legend.position = "none")
 
-#By tissue rollup
-ggplot(sample_metadata, aes(x = tissue_rollup, y = methods_mean, color = tissue_rollup)) +
+
+```
+
+
+## By tissue plot
+```{r}
+
+ggplot(tumor_purity, aes(x = tissue_rollup, y = methods_mean, color = tissue_rollup)) +
   geom_jitter(width = 0.2) +
   stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
   stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
   labs(x = "Tissue of origin", y = "Percent Tumor") +
   theme(legend.position = "none")
 
-#Survival
-sample_metadata |> 
+```
+
+
+## Survival plot
+```{r}
+
+png(filename = "../outputs/plots/survival_deconvolution_tumor.png", height = 500, width = 700, res = 120)
+tumor_purity |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
   mutate(grouping = ifelse(methods_mean > median(methods_mean), "High", "Low")) |> 
   ggsurvfit::survfit2(survival::Surv(last_event, survial_censor) ~ grouping , data = _) |>
   ggsurvfit::ggsurvfit() +
   ggsurvfit::add_risktable(risktable_stats = "n.risk") +
   ggsurvfit::add_pvalue() +
   ggtitle("Sample Percent Tumor")
+dev.off()
 
 ```
+
 
 
 # Epic Deconvolution
-
-## Save
-```{r}
-
-write.csv(t(deconvolute_results_epic), file = "../outputs/epic_deconvolutions.csv")
-
-```
-
 
 ## Add to sample metadata
 ```{r}
@@ -206,29 +247,33 @@ write.csv(t(deconvolute_results_epic), file = "../outputs/epic_deconvolutions.cs
 #Add epic deconvultion results to sample metadata
 sample_metadata = merge(sample_metadata, deconvolutions$epic, by = "row.names")
 #change columns to numeric
-# sample_metadata[,colnames(deconvolutions$epic)] = as.numeric(unlist(colnames(deconvolutions$epic)))
+sample_metadata = sample_metadata |> 
+  mutate_at(colnames(deconvolutions$epic), as.numeric)
 
 ```
 
-## Plotting functions
+## Fix column names
 ```{r}
 
-#Survival
-survival_plot = function(cell_type) {
-  
-sample_metadata |> 
-  dplyr::filter(tissue_rollup == "Cutanous") |> 
-  dplyr::select(cell_type, last_event, survial_censor) |> 
-  mutate(grouping = ifelse(.data[[cell_type]] > median(.data[[cell_type]]), "High", "Low")) |> 
-  ggsurvfit::survfit2(survival::Surv(last_event, survial_censor) ~ grouping, data = _) |>
-  ggsurvfit::ggsurvfit() +
-    ggsurvfit::add_risktable(risktable_stats = "n.risk") +
-    ggsurvfit::add_pvalue() +
-    ggtitle(cell_type)
-}
+sample_metadata = sample_metadata |> 
+  rename(Bcell = `B cell`,
+         CAF = `Cancer associated fibroblast`,
+         CD8 = `T cell CD8+`,
+         Endothelial = `Endothelial cell`,
+         NK = `NK cell`,
+         CD4 = `T cell CD4+`,
+         Other_Cells = `uncharacterized cell`)
 
 
-#By Tissue Rollup
+```
+
+
+## Plot cell types by tissue 
+```{r}
+
+cell_types = colnames(sample_metadata[,40:47])
+
+#function
 tissue_rollup_plot = function(cell_type) {
   
 sample_metadata |> 
@@ -241,12 +286,22 @@ sample_metadata |>
 
 }
 
+#plots
+lapply(cell_types, tissue_rollup_plot)
 
-#By Stage
+rm(tissue_rollup_plot)
+
+```
+
+
+## Plot cell types by disease stage
+```{r}
+
+#function
 stage_plot = function(cell_type) {
   
   sample_metadata |> 
-  dplyr::filter(tissue_rollup == "Cutanous") |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
   ggplot(aes(x = ajcc_pathologic_stage, y = .data[[cell_type]], color = ajcc_pathologic_stage)) +
     geom_jitter(width = 0.2) +
     stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
@@ -256,22 +311,11 @@ stage_plot = function(cell_type) {
 
 }
 
+#plots
+lapply(cell_types, stage_plot)
 
-```
-
-## Plots
-```{r}
-
-deconvolutions_to_plot = colnames(sample_metadata[69:76])
-
-#survival
-lapply(deconvolutions_to_plot, survival_plot)
-
-#tissue roll up plots
-lapply(deconvolutions_to_plot, tissue_rollup_plot)
-
-#stage plots
-lapply(deconvolutions_to_plot, stage_plot)
+#clean up
+rm(stage_plot)
 
 ```
 
@@ -281,10 +325,10 @@ lapply(deconvolutions_to_plot, stage_plot)
 
 #dataframe of statistics comparing cell types between primary and metastatic samples; filtered on only cutaneous samples
 deconvolution_stats = sample_metadata |> 
-  dplyr::filter(tissue_rollup == "Cutanous") |> 
-  dplyr::select(decovolutions_to_plot, tumor_descriptor) |> 
-  mutate_at(decovolutions_to_plot, as.numeric) |> 
-  tidyr::pivot_longer(cols = decovolutions_to_plot, names_to = "Cell_Type", values_to = "Value") |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
+  dplyr::select(cell_types, tumor_descriptor) |> 
+  mutate_at(cell_types, as.numeric) |> 
+  tidyr::pivot_longer(cols = cell_types, names_to = "Cell_Type", values_to = "Value") |> 
   mutate(Cell_Type = as.factor(Cell_Type)) |> 
   group_by(Cell_Type) |> 
   rstatix::t_test(Value ~ tumor_descriptor) |> 
@@ -293,18 +337,24 @@ deconvolution_stats = sample_metadata |>
 
 ```
 
+
 ### Plotting function
 ```{r}
 
 #Plotting function
 decon_plot = function(cell_type){
     sample_metadata |> 
-      dplyr::filter(tissue_rollup == "Cutanous") |> 
+      dplyr::filter(tissue_rollup == "Cutaneous") |> 
       ggplot(aes(x = tumor_descriptor, y = .data[[cell_type]], color = tumor_descriptor)) +
         geom_jitter(width = 0.2) +
         stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
-        stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black")
+        stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
+        theme(legend.position = "none") +
+        xlab("") +
+        ylab("Frequency") +
+        ggtitle(cell_type)
 }
+
 
 ```
 
@@ -312,11 +362,37 @@ decon_plot = function(cell_type){
 ### Plots
 ```{r}
  
-lapply(deconvolutions_to_plot, decon_plot)
+lapply(cell_types, decon_plot)
+
+rm(decon_plot)
 
 ```
 
-## Survival
+
+####Save
+```{r}
+
+p1 = decon_plot("Bcell")
+p2 = decon_plot("CAF")
+p3 = decon_plot("CD8")
+p4 = decon_plot("Endothelial")
+p5 = decon_plot("Macrophage")
+p6 = decon_plot("NK")
+p7 = decon_plot("CD4")
+p8 = decon_plot("Other_Cells")
+
+png(filename = "../outputs/plots/deconvolution_primary_vs_met.png", height = 600, width = 1400, res = 120)
+ggarrange(p1, p7, p3, p6, p5, p2, p4, p8,
+          ncol = 4,
+          nrow = 2)
+dev.off()
+
+rm(list = c("p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"))
+
+
+```
+
+## Survival 
 
 ### Statistics
 ```{r}
@@ -324,173 +400,270 @@ lapply(deconvolutions_to_plot, decon_plot)
 #Survival
 survival_stats_function = function(cell_type){
 sample_metadata |>
-  dplyr::select(colnames(deconvolutions$epic), last_event, survial_censor) |>
-  tidyr::pivot_longer(cols = colnames(deconvolutions$epic), names_to = "Cell_Type", values_to = "Value") |>
+  dplyr::select(cell_types, last_event, survial_censor) |>
+  tidyr::pivot_longer(cols = cell_types, names_to = "Cell_Type", values_to = "Value") |>
   dplyr::filter(Cell_Type == cell_type) |>
   mutate(cell_type_division = ifelse(Value > median(Value), "high", "low")) |>
   survival::coxph((Surv(last_event, survial_censor) ~ cell_type_division), data = _) |> 
   summary()
 }
 
-survival_stats = lapply(colnames(deconvolutions$epic), survival_stats_function)
-names(survival_stats) = colnames(deconvolutions$epic)
+survival_stats = lapply(cell_types, survival_stats_function)
+names(survival_stats) = cell_types
 
-#pvalue
-survival_stats$`B cell`$waldtest[3]
-#coefficient
-survival_stats$`B cell`$conf.int[1]
-#confidence interval lower
-survival_stats$`B cell`$conf.int[3]
-#confidence interval upper
-survival_stats$`B cell`$conf.int[4]
+#clean up
+rm(survival_stats_function)
 
 ```
+
+
 #### Dataframe
 ```{r}
 
-extract_values = function(cell_type){
-  pvalue = survival_stats[cell_type]$waldtest[3]
-  print(pvalue)
+# #pvalue
+# survival_stats$`Bcell`$waldtest[3]
+# #hazard ratio
+# survival_stats$`Bcell`$conf.int[1]
+# #confidence interval lower
+# survival_stats$`Bcell`$conf.int[3]
+# #confidence interval upper
+# survival_stats$`Bcell`$conf.int[4]
+
+survival_stats_df = data.frame(matrix(ncol = 5, nrow = 0))
+
+for(cell_type in cell_types){
+  
+  pvalue = unname(survival_stats[[cell_type]]$waldtest[3])
+  HR = survival_stats[[cell_type]]$conf.int[1]
+  lower_interval = survival_stats[[cell_type]]$conf.int[3]
+  upper_interval = survival_stats[[cell_type]]$conf.int[4]
+  
+  temp = c(cell_type, pvalue, HR, lower_interval, upper_interval)
+  
+  survival_stats_df = rbind(temp, survival_stats_df)
+  
 }
 
-extract_values("B cell")
+colnames(survival_stats_df) <- c('cell_type', 'pval', 'HR', "lower_interval", "upper_interval")
+
+survival_stats_df = survival_stats_df |> 
+  mutate_at(c('pval', 'HR', "lower_interval", "upper_interval"), as.numeric)
+
+rm(list = c("cell_type", "HR", "lower_interval", "pvalue", "temp", "upper_interval"))
 
 ```
 
-# WGCNA
+### Kaplan Meier Plots
+
 ```{r}
 
-
-
-```
-
-
-
-
-
-# Cell signature enrichment in modules
-
-## Retreive cell signatures
-```{r}
-
-cell_signatures = as.list(readxl::read_excel("../references/Cell_type_Signatures.xlsx"))
-cell_signatures = lapply(cell_signatures, function(x) x[!is.na(x)])
-
-```
-
-
-## Data frame of module genes
-```{r}
-
-#Make a data frame of custom enricher terms for modules
-enricher_modules = module_genes |> 
-  dplyr::select(Module, Symbol)
-#rename columns to play nice with enricher
-colnames(enricher_modules) = c("TermID", "geneID")
-
-
-```
-
-
-## Function
-```{r}
-
-#Function
-module_enrichment = function(signature) {
-  enricher(gene = cell_signatures[[signature]],
-           TERM2GENE = enricher_modules,
-           maxGSSize = 100000)
+#function
+survival_plot = function(cell_type) {
+  
+sample_metadata |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
+  dplyr::select(cell_type, last_event, survial_censor) |> 
+  mutate(grouping = ifelse(.data[[cell_type]] > median(.data[[cell_type]]), "High", "Low")) |> 
+  ggsurvfit::survfit2(survival::Surv(last_event, survial_censor) ~ grouping, data = _) |>
+  ggsurvfit::ggsurvfit() +
+    ggsurvfit::add_risktable(risktable_stats = "n.risk") +
+    ggsurvfit::add_pvalue() +
+    ggtitle(cell_type) +
+    xlab("Days")
 }
 
+#plots
+lapply(cell_types, survival_plot)
+
+#clean up
+rm(survival_plot)
 
 ```
 
 
-## Cell Signature Enrichments
+##### Save
 ```{r}
 
-enricher_results = lapply(names(cell_signatures), module_enrichment)
-#add names to results list
-names(enricher_results) = names(cell_signatures)
+p1 = survival_plot("Bcell")
+p2 = survival_plot("CAF")
+p3 = survival_plot("CD8")
+p4 = survival_plot("Endothelial")
+p5 = survival_plot("Macrophage")
+p6 = survival_plot("NK")
+p7 = survival_plot("CD4")
+p8 = survival_plot("Other_Cells")
+
+png(filename = "../outputs/plots/deconvolution_survival.png", height = 600, width = 1400, res = 120)
+ggarrange(p1, p7, p3, p6, p5, p2, p4, p8,
+          ncol = 4,
+          nrow = 2)
+dev.off()
+
+rm(list = c("p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"))
 
 ```
 
 
-## Plots
+## Forest plot
 ```{r}
 
-enricher_results_df = data.frame()
-
-for(cell_signature in names(enricher_results)){
-  temp = enricher_results[[cell_signature]]@result
-  temp[["Cell_Type"]] = cell_signature
-  enricher_results_df = rbind(enricher_results_df, temp)
-}
-
-
-enricher_results_df_pval = enricher_results_df |> 
-  tidyr::pivot_wider(names_from = Cell_Type, values_from = p.adjust, id_cols = ID)
-
-rownames(enricher_results_df_pval) = enricher_results_df_pval$ID
-
-enricher_results_df_pval[,2:14] = 1 - enricher_results_df_pval[,2:14]
-#need to invert p-values
-
-enricher_results_df_pval[is.na(enricher_results_df_pval)] = 0
+png(filename = "../outputs/plots/deconvolution_forest_plot.png", height = 400, width = 500, res = 120)
+ggplot(survival_stats_df, aes(x = HR, y = cell_type, xmin = lower_interval, xmax = upper_interval)) +
+  geom_point(size = 3) +
+  geom_errorbarh(height=.1) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  xlab("Unadjusted Hazard Ratio") + 
+  ylab("")
+dev.off()
+  
+```
 
 
-#png(filename = "../outputs/cell_types_in_WGCNA_modules.png")
-heatmap(as.matrix(enricher_results_df_pval[,2:14]),
-        labRow = enricher_results_df_pval$ID,
-        scale = "none",
-        Rowv = NA,
-        Colv = NA,
-        main = "Cell Signature Enrichment in WGCNA Modules")
-#dev.off()
+### Multivariable regression
+```{r}
 
-#need a legend
+survival_models = list()
+
+#Module with only intercept
+survival_models$intercept_only = survival::coxph(Surv(last_event, survial_censor) ~ 1, data = sample_metadata)
+
+summary(survival_models$intercept_only)
+
+#Model with all modules
+survival_models$full_model = survival::coxph(Surv(last_event, survial_censor) ~ Bcell + CAF + CD4 + CD8 + Endothelial + Macrophage + NK + Other_Cells, 
+                                                data = sample_metadata)
+
+summary(survival_models$full_model)
+
+```
+
+#### Stepwise regression
+```{r}
+
+#Step-wise variable selection
+stepwise_regression = StepReg::stepwiseCox(Surv(last_event, survial_censor) ~ Bcell + CAF + CD4 + CD8 + Endothelial + Macrophage + NK + Other_Cells,
+                        data = sample_metadata, 
+                        selection = "score",
+                        select = "AIC",
+                        method = "efron",
+                        best = 10)
+
+unname(unlist(stepwise_regression$`Selected Varaibles`))
+
+#Best model
+survival_models$optimized_model = survival::coxph(Surv(last_event, survial_censor) ~ Bcell + CAF + CD4 + CD8 + Endothelial + Other_Cells,
+                                                  data = sample_metadata)
+
+summary(survival_models$optimized_model)
+
+rm(stepwise_regression)
 
 
 ```
 
-#Correlate deconvolutions with module eigen values 
+
+#### AIC
 ```{r}
 
-#add deconvolution data to data frame
-module_cell_type_df = merge(annotated_me, deconvolutions$epic, by = "row.names")
+#AIC values
+extractAIC(survival_models$intercept_only)  
+extractAIC(survival_models$full_model)
+extractAIC(survival_models$optimized_model)
 
-module_cell_type_df = module_cell_type_df |> 
-  select(starts_with("ME"), 55:62) |> 
-  mutate_if(is.character, as.numeric)
+```
 
-ggplot(module_cell_type_df, aes(x = MEyellow, y = `T cell CD4+`)) +
-  geom_point() +
-  geom_smooth(method = "lm")
+# ...
 
-#correlations 
+## Correlations with WGCNA Modules - IN PROGRESS
+
+### Create merged dataframe
+```{r}
+
+#read in WGCNA modules
+modules = readRDS("../outputs/wgcna_object.rds")
+modules = modules$MEs
+module_names = colnames(modules)
+
+# #add sample metadata annotations
+# annotated_me = merge(modules$MEs, sample_metadata, by.x = "row.names", by.y = "sample_id")
+# rownames(annotated_me) = annotated_me$Row.names
+# annotated_me = annotated_me[,c(-1)]
+
+#read in epic deconvolution results
+deconvolution_epic = read.csv("../outputs/deconvolution_epic.csv")
+rownames(deconvolution_epic) = deconvolution_epic$X
+deconvolution_epic = deconvolution_epic[,2:ncol(deconvolution_epic)]
+colnames(deconvolution_epic) = c("Bcell", "CAF", "CD4", "CD8", "Endothelial", "Macrophage", "NK", "Other_Cells")
+
+#merge modules, deconvolution results, sample metadata
+module_cell_type_df = merge(modules, deconvolution_epic, by = "row.names")
+rownames(module_cell_type_df) = module_cell_type_df$Row.names
+module_cell_type_df = module_cell_type_df[,2:ncol(module_cell_type_df)]
+
+#clean up
+rm(list = c("modules", "annotated_me", "deconvolution_epic"))
+
+```
+
+
+### Correlations
+```{r}
+
 module_cell_type_correlations = cor(module_cell_type_df)
 
-corrplot(module_cell_type_correlations, type="upper", order="hclust")
-#
 #Reformat data for ggplot
-module_cell_type_correlations_long = module_cell_type_correlations |>
+module_cell_type_correlations = module_cell_type_correlations |>
   as.data.frame() |> 
   mutate(module_name = row.names(module_cell_type_correlations)) |> 
-  tidyr::pivot_longer(cols = 1:25) |> 
+  tidyr::pivot_longer(cols = colnames(module_cell_type_correlations)) |> 
   dplyr::filter(!(name %in% module_names)) |> 
   dplyr::filter(module_name %in% module_names)
 
-#png(file = "../outputs/module_deconvolution_correlations.png", width = 800, height = 480)
-ggplot(module_cell_type_correlations_long, aes(x = module_name, y = name, fill = value)) +
+```
+
+### Correlations Heatmap
+```{r}
+
+png(file = "../outputs/plots/module_deconvolution_correlations.png", height = 600, width = 1000, res = 150)
+ggplot(module_cell_type_correlations, aes(x = module_name, y = name, fill = value)) +
   geom_tile() +
   scale_fill_gradient2(low="red", mid = "white", high="blue") +
   theme(axis.text.x = element_text(angle = 90)) +
-  labs(x = "WGCNA Module", y = "Epic Deconvolution Cell Type", title = "Correlations: Module Eigen Values & Cell Type Frequencies", fill = "Correlation Coefficient")
-#dev.off()
+  labs(x = "WGCNA Module", y = "Epic Deconvolution Cell Type", title = "Correlations: Module Eigen Values & Cell Type Frequencies", fill = "Correlation\nCoefficient") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+dev.off()
 
 ```
 
-#XCell
+### Scatter plots
+```{r}
+
+p1 = ggplot(module_cell_type_df, aes(x = MEblack, y = CAF)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ylim(0, max(module_cell_type_df$CAF))
+
+p2 = ggplot(module_cell_type_df, aes(x = MEyellow, y = CD8)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ylim(0, max(module_cell_type_df$CD8))
+
+p3 = ggplot(module_cell_type_df, aes(x = MEtan, y = Other_Cells)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ylim(0, max(module_cell_type_df$Other_Cells))
+
+png(filename = "../outputs/plots/module_deconvolution_correlations_examples.png", height = 450, width = 1200, res = 150)
+ggarrange(p1, p2, p3,
+          ncol = 3)
+dev.off()
+
+```
+
+
+
+# XCell
+
 ```{r}
 
 
