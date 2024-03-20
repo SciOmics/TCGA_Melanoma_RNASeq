@@ -35,9 +35,7 @@ rownames(emt_scores) = emt_scores[["Sample_ID"]]
 emt_scores = emt_scores[,-1]
 
 #deconvolutions
-deconvolutions = read.csv("../outputs/epic_deconvolutions.csv", row.names = 1)
-colnames(deconvolutions) = deconvolutions[1,]
-deconvolutions = deconvolutions[2:nrow(deconvolutions),]
+deconvolutions = read.csv("../outputs/deconvolution_epic.csv", row.names = 1)
 
 #WGCNA modules
 modules = read.csv("../outputs/WGCNA_module_eigenvalues.csv")
@@ -45,6 +43,7 @@ rownames(modules) = modules[["X"]]
 modules = modules[,-1]
 
 ```
+
 
 ## Merge
 ```{r}
@@ -135,6 +134,7 @@ boosted_recipe |> prep() |>
 
 ```
 
+
 # Workflow
 ```{r}
 
@@ -192,6 +192,7 @@ boosted_tune |>
     facet_wrap(~hyperparameter, scales = "free_x")
 
 ```
+
 
 ## Top Models
 ```{r}
@@ -289,5 +290,8 @@ results |>
   autoplot() +
   annotate("text", x = 0.9, y = 0, label = paste0("AUC: ", round(auc, 4)))
 dev.off()
+
+#clean up
+rm(auc)
 
 ```
