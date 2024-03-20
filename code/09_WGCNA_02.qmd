@@ -18,6 +18,7 @@ library(ggraph)
 library(data.table)
 library(parallel)
 library(corrplot)
+library(readxl)
 
 ggplot2::theme_set(ggplot2::theme_classic())
 
@@ -320,108 +321,14 @@ BIC(survival_models$optimized_model)
 ```{r}
 
 cell_signatures = as.list(read_excel("../references/Cell_type_Signatures.xlsx"))
-
-```
-
-
-## Function
-```{r}
-
-module_enrichment = function(signature) {
-  enricher(gene = cell_signatures[[signature]],
-           TERM2GENE = enricher_modules,
-           maxGSSize = 100000)
-}
-
-```
-
-
-## Results
-```{r}
-
-enricher_results = lapply(names(cell_signatures), module_enrichment)
-#add names to results list
-names(enricher_results) = names(cell_signatures)
-
-```
-
-
-```{r}
-
-##CLEAN THIS UP##
-
-#Function
-module_enrichment = function(signature) {
-  enricher(gene = signatures[[signature]],
-           TERM2GENE = enricher_modules,
-           maxGSSize = 100000)
-}
-
-enricher_results = lapply(names(signatures), module_enrichment)
-#add names to results list
-names(enricher_results) = names(signatures)
-
-
-
-
-
-
-enricher_results_df = data.frame()
-
-for(signature in names(enricher_results)){
-  temp = enricher_results[[signature]]@result
-  temp[["Signature"]] = signature
-  enricher_results_df = rbind(enricher_results_df, temp)
-}
-
-
-enricher_results_df_pval = enricher_results_df |> 
-  tidyr::pivot_wider(names_from = Signature, values_from = p.adjust, id_cols = ID)
-
-rownames(enricher_results_df_pval) = enricher_results_df_pval$ID
-
-enricher_results_df_pval[,2:7] = 1 - enricher_results_df_pval[,2:7]
-#need to invert p-values
-
-enricher_results_df_pval[is.na(enricher_results_df_pval)] = 0
-
-
-#png(filename = "../outputs/cell_types_in_WGCNA_modules.png")
-heatmap(as.matrix(enricher_results_df_pval[,2:7]),
-        labRow = enricher_results_df_pval$ID,
-        scale = "none",
-        Rowv = NA,
-        Colv = NA,
-        main = "Epi/Mes Enrichment in WGCNA Modules")
-#dev.off()
-
-#need a legend
-
-##CORRELATIONS##
-
-```
-
-
-# ...
-
-## Retreive cell signatures
-```{r}
-
-cell_signatures = as.list(readxl::read_excel("../references/Cell_type_Signatures.xlsx"))
 cell_signatures = lapply(cell_signatures, function(x) x[!is.na(x)])
 
 ```
 
 
-## Data frame of module genes
+## Data frame of Enricher terms
 ```{r}
 
-#Import WGCNA module genes
-module_genes = read.csv("../outputs/wgcna_module_genes.csv")
-row.names(module_genes) = module_genes$X
-module_genes = module_genes[,-1]
-
-#Make a data frame of custom enricher terms for modules
 enricher_modules = module_genes |> 
   dplyr::select(Module, Symbol)
 #rename columns to play nice with enricher
@@ -430,31 +337,32 @@ colnames(enricher_modules) = c("TermID", "geneID")
 
 ```
 
+
 ## Function
 ```{r}
 
-#Function
 module_enrichment = function(signature) {
   enricher(gene = cell_signatures[[signature]],
            TERM2GENE = enricher_modules,
            maxGSSize = 100000)
 }
 
-
 ```
 
 
-## Cell Signature Enrichments
+## Enricher analysis
 ```{r}
 
 enricher_results = lapply(names(cell_signatures), module_enrichment)
 #add names to results list
 names(enricher_results) = names(cell_signatures)
 
+#clean up
+rm(module_enrichment)
+
 ```
 
-
-## Plots
+### Tidy to dataframe
 ```{r}
 
 enricher_results_df = data.frame()
@@ -465,28 +373,18 @@ for(cell_signature in names(enricher_results)){
   enricher_results_df = rbind(enricher_results_df, temp)
 }
 
-
-enricher_results_df_pval = enricher_results_df |> 
-  tidyr::pivot_wider(names_from = Cell_Type, values_from = p.adjust, id_cols = ID)
-
-rownames(enricher_results_df_pval) = enricher_results_df_pval$ID
-
-enricher_results_df_pval[,2:14] = 1 - enricher_results_df_pval[,2:14]
-#need to invert p-values
-
-enricher_results_df_pval[is.na(enricher_results_df_pval)] = 0
+```
 
 
-#png(filename = "../outputs/cell_types_in_WGCNA_modules.png")
-heatmap(as.matrix(enricher_results_df_pval[,2:14]),
-        labRow = enricher_results_df_pval$ID,
-        scale = "none",
-        Rowv = NA,
-        Colv = NA,
-        main = "Cell Signature Enrichment in WGCNA Modules")
-#dev.off()
+### Heatmap
+```{r}
 
-#need a legend
-
+png(filename = "../outputs/plots/cell_types_in_WGCNA_modules.png", height = 400, width = 600, res = 120)
+ggplot(enricher_results_df, aes(x = Cell_Type, y = ID)) +
+  geom_tile(aes(fill = `p.adjust`)) +
+  scale_fill_gradient(low = "red", high = "white") +
+  labs(x = "Cell Signature", y = "WGCNA Module", fill = "Adjusted P-Value", title = "Enrichment of Cell Signatures in\nWGCNA Modules") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 
 ```
+
