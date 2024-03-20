@@ -384,7 +384,8 @@ ggplot(enricher_results_df, aes(x = Cell_Type, y = ID)) +
   geom_tile(aes(fill = `p.adjust`)) +
   scale_fill_gradient(low = "red", high = "white") +
   labs(x = "Cell Signature", y = "WGCNA Module", fill = "Adjusted\nP-Value", title = "Enrichment of Cell Signatures in\nWGCNA Modules") + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+dev.off()
 
 ```
 
