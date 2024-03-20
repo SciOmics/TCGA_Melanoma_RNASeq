@@ -126,7 +126,9 @@ rm(list = c("plot1", "plot2"))
 
 ```
 
-# Stage vs Overall Survival
+# Survival 
+
+## Disease stage
 ```{r}
 
 #Simplify staging
@@ -159,6 +161,85 @@ sample_metadata |>
     xlab ("Days") +
     scale_color_manual(values = palette_discrete[c(5,2,3,1)])
 dev.off()
+
+```
+
+
+## Age 
+```{r}
+
+#Cox regression results treating age as continuous
+cox_results = coxph(Surv(last_event, survial_censor) ~ age_at_index , data = sample_metadata) |> 
+    summary()
+
+#continuous scale plot
+p1 = ggplot(sample_metadata, aes(x = age_at_index, y = last_event, color = as.factor(survial_censor))) +
+    geom_point() +
+    scale_color_manual(values = c("black", "grey")) +
+    labs(x = "Patient Age", y = "Last Event", color = "Status at last event:\n0) Alive\n1) Death", title = "Overall Survival by Patient Age") +
+    annotate("text", x = 80, y = 9000, label = paste0("HR: ", round(cox_results$coefficients[2], 4), "\np-value: ", round(cox_results$coefficients[5], 5) ))
+
+#Age bracketing
+sample_metadata = sample_metadata |> 
+    mutate(age_bracket = as.factor(case_when(
+        age_at_index < 30 ~ "0 to 29",
+        age_at_index >= 30 &  age_at_index < 40 ~ "30 to 39",
+        age_at_index >= 40 &  age_at_index < 50 ~ "40 to 49",
+        age_at_index >= 50 &  age_at_index < 60 ~ "50 to 59",
+        age_at_index >= 60 &  age_at_index < 70 ~ "60 to 69",
+        age_at_index >= 70 &  age_at_index < 80 ~ "70 t0 79",
+        age_at_index >= 80  ~ "80+",
+        )))
+
+#plot
+p2 = sample_metadata |> 
+    survfit2(Surv(last_event, survial_censor) ~ age_bracket , data = _) |>
+    ggsurvfit() +
+    #add_risktable(risktable_stats = "n.risk") +
+    #ggtitle(label = "Overall Survival by Patient Age") +
+    xlab ("Days")  +
+    scale_color_manual(values = palette_continuous[c(1, 16, 32, 48, 64, 80, 96)])
+
+#plot
+png(filename = "../outputs/plots/survival_by_age.png", height = 1000, width = 1200, res = 120)
+ggarrange(p1, p2,
+          nrow = 2)
+dev.off()
+
+#clean up
+rm(list = c("cox_results", "p1", "p2"))
+
+
+```
+
+
+## Sex 
+```{r}
+
+png(filename = "../outputs/plots/survival_by_sex.png", height = 600, width = 800, res = 200)
+sample_metadata |> 
+    survfit2(Surv(last_event, survial_censor) ~ gender , data = _) |>
+    ggsurvfit() +
+    add_risktable(risktable_stats = "n.risk") +
+    add_pvalue() +
+    ggtitle(label = "Overall Survival by Patient Sex") +
+    xlab ("Days")
+dev.off()
+
+```
+
+
+## Race
+```{r}
+
+#too few samples from non-white
+sample_metadata |> 
+    survfit2(Surv(last_event, survial_censor) ~ race , data = _) |>
+    ggsurvfit() +
+    add_risktable(risktable_stats = "n.risk") +
+    add_pvalue() +
+    ggtitle(label = "Overall Survival by Patient Sex") +
+    xlab ("Days")
 
 ```
 

@@ -175,3 +175,15 @@ ___
 
 ___
 
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_by_sex.png?raw=true)  
+
+**Figure X.**
+
+___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_by_age.png?raw=true)  
+
+**Figure X.**
+
+___
+
