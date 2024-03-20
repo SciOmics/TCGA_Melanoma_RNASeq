@@ -132,7 +132,7 @@ ___
 ___
 
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/dmodule_deconvolution_correlations_examples.png?raw=true)  
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/module_deconvolution_correlations_examples.png?raw=true)  
 
 **Figure X.***
 
