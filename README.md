@@ -24,6 +24,8 @@ ___
 
 ...I will start by getting a general feel for the data...
 
+___
+
 | Sample Origin | Tissue | Sample Count |
 | --- | --- | --- |
 | Metastatic | CNS | 5 |
@@ -72,10 +74,17 @@ ___
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_by_age.png?raw=true)  
 
 **Figure 3. Overall survival by patient age.**
-Patients who are older have decreased overall survival probability. The top plot shows shows patient age as a continuous variable vs. the date of last followup from the index date. Be careful in interpretting this plot given that many of these data are censored (black dots). A Cox regression shows a significant relationship between overall survival and patient age. The bottom plot is a different visualization of these data, showing surival curves based on binned ages. 
-
+Patients who are older have decreased overall survival probability. The top plot shows shows patient age as a continuous variable vs. the date of last followup from the index date. Be careful in interpretting this plot given that many of these data are censored (black dots). A Cox regression shows a stastically significant relationship between overall survival and patient age. The bottom plot is a different visualization of these data, showing surival curves based on binned ages. 
 
 ___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_plot_stage.png?raw=true)  
+
+**Figure 4. Overall survival by disease stage.**
+Survival probability gets shorter as disease stage increases. This is what I would expect, but it is a good sanity check of the data. 
+
+___
+
 
 ...next I will normalize the RNA-seq data and do some exploratory analysis...
 
@@ -83,42 +92,42 @@ ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plots.png?raw=true)  
 
-**Figure 2. PCA plots of normalized expression**
+**Figure 5. PCA plots of normalized expression**
 There is some seperation of primary vs. metastatic samples in PC1 and PC2. This is driven in part by the lymph node metastatic samples, but the metastatic cutaneous samples also seem to seperate. Let's plot just the cutaneous samples.
 
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plot_cutaneous.png?raw=true)  
 
-**Figure 3. PCA plot filtered to only cutaneous samples**
+**Figure 6. PCA plot filtered to only cutaneous samples**
 There does indeed appear to be some seperating along PC1 and PC2, and maybe a bit in PC3. 
-
-___
-
-
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_plot_stage.png?raw=true)  
-
-**Figure 3. Overall survival by disease stage.**
-Survival probability gets shorter as disease stage increases. This is what I would expect, but it is a good sanity check of the data. 
 
 ___
 
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/volcano_plot.png?raw=true)  
 
-**Figure 4. Volcano plot: primary vs. metastatic samples.**
+**Figure 7. Volcano plot: primary vs. metastatic samples.**
 
 ___
 
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/gene_expression_plots.png?raw=true)  
+
+**Figure 8. Gene expression: primary vs. metastatic samples.**
+
+___
+
+
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/GSEA.png?raw=true)  
 
-**Figure 5. Gene set enrichment analysis: primary vs. metastatic samples.**
+**Figure 9. Gene set enrichment analysis: primary vs. metastatic samples.**
 
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/Epi_Mes_scores.png?raw=true)  
 
-**Figure 6. Epithelial–Mesenchymal scores.** Samples were scored using epithelial and mesenchymal gene signatures from [Tan TZ, et al. EMBO Mol Med. 2014.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4287932/) (cleaned csv version available in the references folder) by GSEA, ssGSEA, and SingScore. ssGSEA and Singscore produced highly similar results, with metastatic samples predominately being low in epithelial scores. GSVA scoring produced a wider spread in the epithelial scores of metastatic samples. Likewise, primary samples scored low in the mesenchymal signature for ssGSEA and SingScore, but GSVA again had a wide spread. 
+**Figure 10. Epithelial–Mesenchymal scores.** 
+Samples were scored using epithelial and mesenchymal gene signatures from [Tan TZ, et al. EMBO Mol Med. 2014.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4287932/) (cleaned csv version available in the references folder) by GSEA, ssGSEA, and SingScore. ssGSEA and Singscore produced highly similar results, with metastatic samples predominately being low in epithelial scores. GSVA scoring produced a wider spread in the epithelial scores of metastatic samples. Likewise, primary samples scored low in the mesenchymal signature for ssGSEA and SingScore, but GSVA again had a wide spread. 
 
 ___
 
