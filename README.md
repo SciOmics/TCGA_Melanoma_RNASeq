@@ -108,12 +108,15 @@ ___
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/volcano_plot.png?raw=true)  
 
 **Figure 7. Volcano plot: primary vs. metastatic samples.**
+Genes to the left side of the plot are increased in expression in primary samples, while those on the left are increased in metastatic samples.
 
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/gene_expression_plots.png?raw=true)  
 
 **Figure 8. Gene expression: primary vs. metastatic samples.**
+KRT6B = Keratin 6B
+C7: Complement component 7 
 
 ___
 
