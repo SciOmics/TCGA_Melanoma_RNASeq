@@ -14,6 +14,16 @@ Approaches:
 4) Deconvolution of cell types.
 ___
 
+
+![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
+
+**Figure 1. Directed acyclic graph of hypothesized variables impacting patient overall survival**
+I'll use this model to investigate overall survival in patients. Disease stage, patient sex, and patient age are present in the sample metadata, so that will be straight forward to look at. While the metadata contains lists of treatment info, these are uninformative, so I'll have to ignore this for the purposes of this analysis. Infiltrate of different immune cell populations, cancer associated fibroblasts (CAFs), and epithelial–mesenchymal status are latent variables that I'll derive these from the RNA expression data. 
+
+___
+
+...I will start by getting a general feel for the data...
+
 | Sample Origin | Tissue | Sample Count |
 | --- | --- | --- |
 | Metastatic | CNS | 5 |
@@ -24,6 +34,7 @@ ___
 | Primary | Cutaneous | 96 |
 | Primary | Lymph Node | 1 |
 | Primary | Mucosal | 1 |
+
 
 **Table 1. Summary of the number of sample from different tissue sites.**
 There shouldn't be "Primary" samples from non-cutaneous tissues. These are mislabeled and will be removed. 
@@ -48,19 +59,38 @@ ___
 
 **Table 2. Summary of the number of samples from disease stages.**
 There shouldn't be metastatic samples labeled Stage 0 or stage 1, and probably not stage 2 either. This is concerning. I could eliminate early stage samples, but this would substaintally lower our sample size. I'll leave these samples in for now and see how they related to other samples in a PCA. 
-  
+
+___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_by_sex.png?raw=true)  
+
+**Figure 2. Overall survival by patient sex.** 
+There is no observed difference in overall survival between male and female patients. My hypothesis was wrong. There was a hypothesis that there would be differences in immunotherapy efficacy between male and female patients, but evidence suggests that this is not the case (see [Wallis CJD et al. JAMA Oncol. 2019](https://jamanetwork.com/journals/jamaoncology/fullarticle/2719757)). Regardless, the samples in this dataset are from patients diagnosised at latest 2012, before checkpoint immunotherapy approvals in metastatic melanoma. 
+
+___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_by_age.png?raw=true)  
+
+**Figure 3. Overall survival by patient age.**
+Patients who are older have decreased overall survival probability. The top plot shows shows patient age as a continuous variable vs. the date of last followup from the index date. Be careful in interpretting this plot given that many of these data are censored (black dots). A Cox regression shows a significant relationship between overall survival and patient age. The bottom plot is a different visualization of these data, showing surival curves based on binned ages. 
+
+
+___
+
+...next I will normalize the RNA-seq data and do some exploratory analysis...
+
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plots.png?raw=true)  
 
-**Figure 1. PCA plots of normalized expression**
+**Figure 2. PCA plots of normalized expression**
 There is some seperation of primary vs. metastatic samples in PC1 and PC2. This is driven in part by the lymph node metastatic samples, but the metastatic cutaneous samples also seem to seperate. Let's plot just the cutaneous samples.
 
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_plot_cutaneous.png?raw=true)  
 
-**Figure 2. PCA plot filtered to only cutaneous samples**
+**Figure 3. PCA plot filtered to only cutaneous samples**
 There does indeed appear to be some seperating along PC1 and PC2, and maybe a bit in PC3. 
 
 ___
@@ -136,11 +166,6 @@ ___
 
 **Figure X.***
 
-___
-
-![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
-
-**Figure X. Directed acyclic graph of hypothesized variables impacting patient overall survival**
 
 ___
   
@@ -175,15 +200,5 @@ ___
 
 ___
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_by_sex.png?raw=true)  
 
-**Figure X.**
-
-___
-
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_by_age.png?raw=true)  
-
-**Figure X.**
-
-___
 
