@@ -241,32 +241,27 @@ dev.off()
 
 # Epic Deconvolution
 
+## Load previously calculated epic deconvolution
+```{r}
+
+#Import
+deconvolution_epic = read.csv("../outputs/deconvolution_epic.csv")
+rownames(deconvolution_epic) = deconvolution_epic$X
+deconvolution_epic = deconvolution_epic[,2:ncol(deconvolution_epic)]
+
+#Fix column names
+colnames(deconvolution_epic) = c("Bcell", "CAF", "CD4", "CD8", "Endothelial", "Macrophage", "NK", "Other_Cells")
+
+```
+
+
 ## Add to sample metadata
 ```{r}
 
 #Add epic deconvultion results to sample metadata
-sample_metadata = merge(sample_metadata, deconvolutions$epic, by = "row.names")
-#change columns to numeric
-sample_metadata = sample_metadata |> 
-  mutate_at(colnames(deconvolutions$epic), as.numeric)
+sample_metadata = merge(sample_metadata, deconvolution_epic, by = "row.names")
 
 ```
-
-## Fix column names
-```{r}
-
-sample_metadata = sample_metadata |> 
-  rename(Bcell = `B cell`,
-         CAF = `Cancer associated fibroblast`,
-         CD8 = `T cell CD8+`,
-         Endothelial = `Endothelial cell`,
-         NK = `NK cell`,
-         CD4 = `T cell CD4+`,
-         Other_Cells = `uncharacterized cell`)
-
-
-```
-
 
 ## Plot cell types by tissue 
 ```{r}
@@ -420,23 +415,14 @@ rm(survival_stats_function)
 #### Dataframe
 ```{r}
 
-# #pvalue
-# survival_stats$`Bcell`$waldtest[3]
-# #hazard ratio
-# survival_stats$`Bcell`$conf.int[1]
-# #confidence interval lower
-# survival_stats$`Bcell`$conf.int[3]
-# #confidence interval upper
-# survival_stats$`Bcell`$conf.int[4]
-
 survival_stats_df = data.frame(matrix(ncol = 5, nrow = 0))
 
 for(cell_type in cell_types){
   
   pvalue = unname(survival_stats[[cell_type]]$waldtest[3])
-  HR = survival_stats[[cell_type]]$conf.int[1]
-  lower_interval = survival_stats[[cell_type]]$conf.int[3]
-  upper_interval = survival_stats[[cell_type]]$conf.int[4]
+  HR = 1/survival_stats[[cell_type]]$conf.int[1]
+  lower_interval = 1/survival_stats[[cell_type]]$conf.int[3]
+  upper_interval = 1/survival_stats[[cell_type]]$conf.int[4]
   
   temp = c(cell_type, pvalue, HR, lower_interval, upper_interval)
   
@@ -504,7 +490,7 @@ rm(list = c("p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"))
 ```
 
 
-## Forest plot
+### Forest plot
 ```{r}
 
 png(filename = "../outputs/plots/deconvolution_forest_plot.png", height = 400, width = 500, res = 120)
