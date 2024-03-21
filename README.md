@@ -147,12 +147,11 @@ ___
 
 ___
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/cell_types_in_WGCNA_modules.png?raw=true) 
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_forest_primary_vs_met.png?raw=true)  
 
-**Figure X. Enrichment for cell type gene signatures in WGCNA modules**
+**Figure X. .**
 
 ___
-  
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_forest_plot.png?raw=true)  
 
@@ -163,6 +162,12 @@ ___
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_pathways.png?raw=true)  
 
 **Figure X. Pathway enrichment in WGCNA modules.**
+
+___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/cell_types_in_WGCNA_modules.png?raw=true) 
+
+**Figure X. Enrichment for cell type gene signatures in WGCNA modules**
 
 ___
 

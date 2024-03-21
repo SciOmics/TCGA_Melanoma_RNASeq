@@ -22,9 +22,6 @@ library(readxl)
 
 ggplot2::theme_set(ggplot2::theme_classic())
 
-enableWGCNAThreads()
-allowWGCNAThreads()
-
 ```
 
 # Load data
@@ -194,6 +191,13 @@ ggarrange(plots[["yellow"]],
           plots[["brown"]])
 dev.off()
 
+png(filename = "../outputs/plots/wgcna_pathways_primary_vs_met.png", height = 800, width = 1500, res = 120)
+ggarrange(plots[["red"]],
+          plots[["magenta"]],
+          plots[["purple"]],
+          plots[["greenyellow"]])
+dev.off()
+
 ```
 
 
@@ -204,12 +208,34 @@ dev.off()
 
 #Primary vs Mets
 module_stats = annotated_me |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
   dplyr::select(starts_with("ME"), tumor_descriptor) |> 
   tidyr::pivot_longer(cols = contains("ME"), names_to = "Module", values_to = "Value") |> 
   group_by(Module) |> 
-  t_test(Value ~ tumor_descriptor) |> 
+  rstatix::t_test(Value ~ tumor_descriptor, detailed = TRUE) |> 
   adjust_pvalue(method = "BH")
 
+#add standard deviation
+stdev = annotated_me |>
+  dplyr::filter(tissue_rollup == "Cutaneous") |>
+  dplyr::select(starts_with("ME")) |>
+  sapply(sd) |>
+  as.data.frame()
+
+colnames(stdev) = "sd"
+
+module_stats= merge(module_stats, stdev, by.x = "Module", by.y = "row.names")
+
+rm(stdev)
+
+
+#add cohen's d
+module_stats = module_stats |>
+  mutate(cohens_d = estimate/sd,
+         cohens_d_lower = conf.low/sd,
+         cohens_d_upper = conf.high/sd)
+  
+  
 
 ```
 
@@ -227,7 +253,7 @@ plot_modules = function(module_name){
       stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
       stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
       theme(legend.position = "none") +
-      annotate("text", x = 2.5, y = 0, label = paste0("adj p-val:\n", round(pval, 4)))
+      annotate("text", x = 1.5, y = 0, label = paste0("adj p-val:\n", round(pval, 6)))
 
 }
 
@@ -236,11 +262,43 @@ plot_modules = function(module_name){
 ## Plots
 ```{r}
 
-lapply(colnames(annotated_me[1:17]), plot_modules)
+plots = lapply(colnames(annotated_me[1:17]), plot_modules)
+names(plots) = colnames(annotated_me[1:17])
+
+plots
 
 rm(plot_modules)
 
 ```
+
+### Save
+```{r}
+
+png(filename = "../outputs/plots/wgcna_primary_vs_met.png", height = 600, width = 1000, res = 120)
+ggarrange(plots[["MEred"]],
+          plots[["MEmagenta"]],
+          plots[["MEyellow"]],
+          plots[["MEgreenyellow"]])
+dev.off()
+
+```
+
+## Forest plot -- IN PROGRESS --
+```{r}
+
+png(filename = "../outputs/plots/wgcna_forest_primary_vs_met.png", height = 600, width = 800, res = 120)
+ggplot(module_stats, aes(x = cohens_d, y = Module, xmin = cohens_d_lower, xmax = cohens_d_upper)) +
+  geom_point(size = 3) +
+  geom_errorbarh(height=.1) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(title = "Metastatic vs. Primary Samples",
+       subtitle = "Cutaneous Samples Only",
+       x = "Standardized Effect Size (Cohen's d)",
+       y = "")
+dev.off()
+
+```
+
 
 
 # Survival Analysis
