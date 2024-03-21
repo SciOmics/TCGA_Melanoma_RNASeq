@@ -147,6 +147,32 @@ ___
 
 ___
 
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/cell_types_in_WGCNA_modules.png?raw=true) 
+
+**Figure X. Enrichment for cell type gene signatures in WGCNA modules**
+
+___
+  
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_forest_plot.png?raw=true)  
+
+**Figure X. Hazard ratios of overall survival based on WGCNA module eigenvalues.**
+
+___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_pathways.png?raw=true)  
+
+**Figure X. Pathway enrichment in WGCNA modules.**
+
+___
+
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolutions_other_cell_types.png?raw=true)  
+
+**Figure X. Comparisons of deconvolution algorithms.**
+
+___
+
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolution_primary_vs_met.png?raw=true)  
 
 **Figure X. Comparison of cell type deconvolutions between primary and metastatic samples.**
@@ -160,39 +186,23 @@ ___
 ___
 
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolutions_other_cell_types.png?raw=true)  
-
-**Figure X. Comparisons of deconvolution algorithms.**
-
-___
-
-
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolution_forest_plot.png?raw=true)  
-
-**Figure X. Hazard ratios of overall survival based on cell type deconvolutions.**
-
-___
-
-
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/module_deconvolution_correlations_examples.png?raw=true)  
 
 **Figure X. WGCNA module eigenvalues correlations with cell type deconvolutions.**
 
-
 ___
-  
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/cell_types_in_WGCNA_modules.png?raw=true) 
 
-**Figure X. Enrichment for cell type gene signatures  in WGCNA modules**
-
-___
-  
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/module_deconvolution_correlations.png?raw=true)  
 
 **Figure X. Correlations between deconvolution cell frequencies and WGCNA module eigen values.**
 
 ___
   
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolution_forest_plot.png?raw=true)  
+
+**Figure X. Hazard ratios of overall survival based on cell type deconvolutions.**
+
+___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/boostedtree_ROC.png?raw=true)  
 
@@ -206,15 +216,4 @@ ___
 
 ___
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_forest_plot.png?raw=true)  
-
-**Figure X. Hazard ratios of overall survival based on WGCNA module eigenvalues.**
-
-___
-
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_pathways.png?raw=true)  
-
-**Figure X. Pathway enrichment in WGCNA modules.**
-
-___
 
