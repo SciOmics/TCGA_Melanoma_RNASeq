@@ -212,5 +212,15 @@ ___
 
 ___
 
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_forest_plot.png?raw=true)  
 
+**Figure X.**
+
+___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_pathways.png?raw=true)  
+
+**Figure X.**
+
+___
 

@@ -160,7 +160,9 @@ module_enrichment = function(module) {
   na.omit() |> 
   enrichGO(OrgDb = org.Hs.eg.db::org.Hs.eg.db,
            ont = "ALL") |> 
-  dotplot() + ggtitle(module)
+  enrichplot::dotplot(showCategory = 8,
+                      font.size = 8) +
+    ggtitle(module)
 }
 
 ```
@@ -169,13 +171,31 @@ module_enrichment = function(module) {
 ## Plots
 ```{r}
 
-parallel::mclapply(unique(module_genes$Module), 
+plots = parallel::mclapply(unique(module_genes$Module), 
                    module_enrichment, 
                    mc.cores = 12)
 
-rm(module_enrichment)
+names(plots) = unique(module_genes$Module)
+
+plots
+
+rm(list = c("module_enrichment"))
 
 ```
+
+
+### Save
+```{r}
+
+png(filename = "../outputs/plots/wgcna_pathways.png", height = 800, width = 1500, res = 120)
+ggarrange(plots[["yellow"]],
+          plots[["tan"]],
+          plots[["greenyellow"]],
+          plots[["brown"]])
+dev.off()
+
+```
+
 
 # Primary vs metastatic samples
 
@@ -248,6 +268,48 @@ rm(survival_stats_function)
 
 ```
 
+### Dataframe
+```{r}
+
+survival_stats_df = data.frame(matrix(ncol = 5, nrow = 0))
+
+for(module in names(survival_stats)){
+  
+  pvalue = unname(survival_stats[[module]]$waldtest[3])
+  HR = survival_stats[[module]]$conf.int[2]
+  lower_interval = 1/survival_stats[[module]]$conf.int[3]
+  upper_interval = 1/survival_stats[[module]]$conf.int[4]
+  
+  temp = c(module, pvalue, HR, lower_interval, upper_interval)
+  
+  survival_stats_df = rbind(temp, survival_stats_df)
+  
+}
+
+colnames(survival_stats_df) <- c('module', 'pval', 'HR', "lower_interval", "upper_interval")
+
+survival_stats_df = survival_stats_df |> 
+  mutate_at(c('pval', 'HR', "lower_interval", "upper_interval"), as.numeric)
+
+rm(list = c("module", "HR", "lower_interval", "pvalue", "temp", "upper_interval"))
+
+```
+
+
+##Forest Plot
+```{r}
+
+png(filename = "../outputs/plots/wgcna_forest_plot.png", height = 600, width = 900, res = 120)
+ggplot(survival_stats_df, aes(x = HR, y = module, xmin = lower_interval, xmax = upper_interval)) +
+  geom_point(size = 3) +
+  geom_errorbarh(height=.1) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  xlab("Unadjusted Hazard Ratio") + 
+  ylab("")
+dev.off()
+
+```
+
 
 ## Plotting function
 ```{r}
@@ -269,13 +331,31 @@ plot_survival = function(module_name){
 
 ```
 
-
-## Plots
+## KM Plots
 ```{r}
 
-lapply(colnames(annotated_me[1:17]), plot_survival)
+plots = lapply(colnames(annotated_me[1:17]), plot_survival)
+names(plots) = colnames(annotated_me[1:17])
+
+plots
 
 rm(plot_survival)
+
+```
+
+
+### Save
+```{r}
+
+#png(filename = "../outputs/plots/wgcna_survival_plots.png", height = 600, width = 1200, res = 120)
+ggarrange(plots[["MEyellow"]], 
+          plots[["MEtan"]], 
+          plots[["MEgreenyellow"]],
+          plots[["MEbrown"]])
+#dev.off()
+
+#clean up
+rm(plots)
 
 ```
 
