@@ -149,34 +149,34 @@ ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolution_primary_vs_met.png?raw=true)  
 
-**Figure X.**
+**Figure X. Comparison of cell type deconvolutions between primary and metastatic samples.**
 
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolution_survival.png?raw=true)  
 
-**Figure X.**
+**Figure X. Kaplan Meier plots of overall survival based on cell type deconvolutions**
 
 ___
 
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolutions_other_cell_types.png?raw=true)  
 
-**Figure X.**
+**Figure X. Comparisons of deconvolution algorithms.**
 
 ___
 
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/deconvolution_forest_plot.png?raw=true)  
 
-**Figure X.**
+**Figure X. Hazard ratios of overall survival based on cell type deconvolutions.**
 
 ___
 
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/module_deconvolution_correlations_examples.png?raw=true)  
 
-**Figure X.**
+**Figure X. WGCNA module eigenvalues correlations with cell type deconvolutions.**
 
 
 ___
@@ -196,25 +196,25 @@ ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/boostedtree_ROC.png?raw=true)  
 
-**Figure X.**
+**Figure X. Receiver operating characteristic (ROC) curve for predicting metastatic vs. primary samples by a boosted tree model.**
 
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/NN_ROC.png?raw=true)  
 
-**Figure X.**
+**Figure X. Receiver operating characteristic (ROC) curve for predicting metastatic vs. primary samples by a fully connected neural network model.**
 
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_forest_plot.png?raw=true)  
 
-**Figure X.**
+**Figure X. Hazard ratios of overall survival based on WGCNA module eigenvalues.**
 
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_pathways.png?raw=true)  
 
-**Figure X.**
+**Figure X. Pathway enrichment in WGCNA modules.**
 
 ___
 
