@@ -153,14 +153,13 @@ ___
 
 ___
 
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_pathways_primary_vs_met.png?raw=true)  
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_primary_vs_met.png?raw=true)  
 
 **Figure X. .**
 
 ___
 
-
-![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_primary_vs_met.png?raw=true)  
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_pathways_primary_vs_met.png?raw=true)  
 
 **Figure X. .**
 
