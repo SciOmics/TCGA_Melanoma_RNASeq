@@ -23,6 +23,11 @@ diff_exp_table = read.csv("../outputs/differential_expression.csv")
 rownames(diff_exp_table) = diff_exp_table$X
 diff_exp_table = diff_exp_table[,2:ncol(diff_exp_table)]
 
+#sample metadata
+source("functions/Load_Sample_Metadata.R")
+sample_metadata = load_sample_metadata("../data/sample_metadata.csv")
+rm(load_sample_metadata)
+
 ```
 
 

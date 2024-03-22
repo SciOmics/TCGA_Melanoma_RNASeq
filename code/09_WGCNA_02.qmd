@@ -195,7 +195,7 @@ png(filename = "../outputs/plots/wgcna_pathways_primary_vs_met.png", height = 80
 ggarrange(plots[["red"]],
           plots[["magenta"]],
           plots[["purple"]],
-          plots[["greenyellow"]])
+          plots[["turquoise"]])
 dev.off()
 
 ```
@@ -253,7 +253,8 @@ plot_modules = function(module_name){
       stat_summary(fun = mean, geom = "crossbar", width = 0.3, color = "black") +
       stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.3, color = "black") +
       theme(legend.position = "none") +
-      annotate("text", x = 1.5, y = 0, label = paste0("adj p-val:\n", round(pval, 6)))
+      annotate("text", x = 1.5, y = 0, label = paste0("adj p-val:\n", round(pval, 6))) +
+      labs(title = module_name, x = "", y = "Eigenvalue")
 
 }
 
@@ -277,13 +278,13 @@ rm(plot_modules)
 png(filename = "../outputs/plots/wgcna_primary_vs_met.png", height = 600, width = 1000, res = 120)
 ggarrange(plots[["MEred"]],
           plots[["MEmagenta"]],
-          plots[["MEyellow"]],
-          plots[["MEgreenyellow"]])
+          plots[["MEpurple"]],
+          plots[["MEturquoise"]])
 dev.off()
 
 ```
 
-## Forest plot -- IN PROGRESS --
+## Forest plot
 ```{r}
 
 png(filename = "../outputs/plots/wgcna_forest_primary_vs_met.png", height = 600, width = 800, res = 120)
