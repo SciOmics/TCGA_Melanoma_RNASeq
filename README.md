@@ -22,6 +22,18 @@ I'll use this model to investigate overall survival in patients. Disease stage, 
 
 ___
 
+**Survival Models**
+
+| Independent Variable of Interest | Variable(s) to Adjust for |
+| --- | --- | 
+| Patient Age | None |
+| Patient Sex | None |
+| Immune Infiltrate | Disease Stage |
+| Disease Stage | None |
+| Epithelial-Mesenchymal Score | CAF Infiltration, Sample Purity |
+
+___
+
 ...I will start by getting a general feel for the data...
 
 ___
@@ -234,13 +246,5 @@ ___
 
 ___
 
-**Survival Models**
-| Independent Variable of Interest | Variable(s) to Adjust for |
-| --- | --- | 
-| Immune Infiltrate | Cancer Antigen Expression, Sample Tissue Source |
-| Disease Stage | None |
-| Epithelial-Mesenchymal Score | Cancer Associated Fibroblasts, Disease Stage, Sample Tissue Source |
-| Patient Age | None |
-| Cancer Associated Fibroblasts | None |
-| Cancer Antigen Expression | Disease Stage, Sample Tissue Source | 
+
 
