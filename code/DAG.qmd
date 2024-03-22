@@ -10,14 +10,16 @@ library(ggplot2)
 
 ```
 
+# DAG
 ```{r}
 
-survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infiltrate + Treatment + Sex + CAF_Infiltrate + Tumor_Gene_Profile,
-                      EMT_Score ~ Disease_Stage +  Tissue_Rollup + Tumor_Gene_Profile,
+survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infiltrate + Treatment + Sex + CAF_Infiltrate + Cancer_Antigens + Genetic_Programs,
+                      EMT_Score ~ Disease_Stage +  Tissue_Rollup + CAF_Infiltrate,
                       Treatment ~ Disease_Stage + Sample_Collection_Year,
-                      Immune_Infiltrate ~ Tissue_Rollup,
+                      Immune_Infiltrate ~ Tissue_Rollup + Cancer_Antigens,
                       Tissue_Rollup ~ Disease_Stage,
-                      Tumor_Gene_Profile ~ Disease_Stage + Immune_Infiltrate + CAF_Infiltrate + Tissue_Rollup,
+                      Cancer_Antigens ~ Disease_Stage + Tissue_Rollup,
+                      Genetic_Programs ~ Disease_Stage + Tissue_Rollup + Immune_Infiltrate + CAF_Infiltrate,
                       labels = c("Survival" = "Survival",
                                  "EMT_Score" = "EMT\nScore",
                                  "Disease_Stage" = "Disease Stage",
@@ -28,41 +30,107 @@ survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infilt
                                  "Treatment" = "Treatment(s)\nReceived",
                                  "Sex" = "Patient\nSex",
                                  "CAF_Infiltrate" = "Cancer Associated\nFibroblasts",
-                                 "Tumor_Gene_Profile" = "Sample\nGene Expression\nProfile"),
+                                 "Cancer_Antigens" = "Cancer Antigen\nExpression",
+                                 "Genetic_Programs" = "Gene Expression\nPrograms",
+                                 "Sample_Purity" = "Sample Tumor Fraction"),
                       exposure = "EMT_Score",
                       outcome = "Survival")
 
 
-ggdag(survival_dag, text = FALSE, use_labels = "label") +
+```
+
+# DAG plot
+```{r, height = 1200, width = 1200, res = 200}
+
+ggdag(survival_dag, 
+      text = FALSE, 
+      use_labels = "label", 
+      node = TRUE) +
     theme_dag()
 
-
 ```
-#Save DAG Image
+
+
+## Save DAG plot
 ```{r}
 
-png(file = "../outputs/DAG.png", bg = "white")
+png(file = "../outputs/plots/DAG.png", bg = "white", height = 1000, width = 1000, res = 120)
 ggdag(survival_dag, text = FALSE, use_labels = "label") +
     theme_dag()
 dev.off()
 
 ```
 
-
+# Backdoor adjustment paths
 ```{r}
 
-#Backdoor paths
+#Immune infiltrate
+ggdag_adjustment_set(survival_dag,
+                     exposure = c("Immune_Infiltrate"),
+                     outcome = "Survival",
+                     text = FALSE,
+                     text_col = "black",
+                     use_labels = "label",
+                     shadow = TRUE) +
+  theme_dag_blank() +
+  ggtitle("Immune Infiltrate")
+
+#Disease Stage
+ggdag_adjustment_set(survival_dag,
+                     exposure = c("Disease_Stage"),
+                     outcome = "Survival",
+                     text_col = "black",
+                     text = FALSE,
+                     use_labels = "label") +
+  theme_dag_blank() +
+  ggtitle("Disease Stage")
+
+#EMT Score
+ggdag_adjustment_set(survival_dag,
+                     exposure = c("EMT_Score"),
+                     outcome = "Survival",
+                     text_col = "black",
+                     text = FALSE,
+                     use_labels = "label") +
+  theme_dag_blank() +
+  ggtitle("Epithelial-Mesenchymal Score")
+
+#Age
+ggdag_adjustment_set(survival_dag,
+                     exposure = c("Age"),
+                     outcome = "Survival",
+                     text_col = "black",
+                     text = FALSE,
+                     use_labels = "label") +
+  theme_dag_blank() +
+  ggtitle("Patient Age")
+
+#CAF
+ggdag_adjustment_set(survival_dag,
+                     exposure = c("CAF_Infiltrate"),
+                     outcome = "Survival",
+                     text_col = "black",
+                     text = FALSE,
+                     use_labels = "label") +
+  theme_dag_blank() +
+  ggtitle("Cancer Associated Fibroblasts")
+
+#Cancer Antigens
+ggdag_adjustment_set(survival_dag,
+                     exposure = c("Cancer_Antigens"),
+                     outcome = "Survival",
+                     text_col = "black",
+                     text = FALSE,
+                     use_labels = "label") +
+  theme_dag_blank() +
+  ggtitle("Cancer Antigen Expression")
+
+```
+
+# Paths
+
 ggdag_paths(survival_dag,
             from = "Immune_Infiltrate",
             to = "Survival") 
 
 #Adjustment sets
-ggdag_adjustment_set(survival_dag,
-                     exposure = c("Immune_Infiltrate"),
-                     outcome = "Survival",
-                     text = FALSE,
-                     use_labels = "label") +
-  theme_dag_blank()
-
-```
-
