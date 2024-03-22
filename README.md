@@ -1,24 +1,22 @@
 **Under Construction**
 
-This repo is to demo analysis approaches for bulk RNA-seq data using data from TCGA Skin Cutaneous Melanoma (SKCM) dataset.
+This repo is to demo analysis of bulk RNA-seq data using data from TCGA Skin Cutaneous Melanoma (SKCM) dataset.
 
-Goals: 
-1) Contrast primary vs metastatic samples. 
-2) Determine variables (observed and latent) impacting overall survival in patients.
-3) Build a predictive model to distinguish between primary and metastatic samples. 
+Goal: Determine variables impacting overall survival in melanoma patients. 
 
-Approaches:
+Methods:
 1) Differential expression analysis.
-2) Epithelial–Mesenchymal gene signature scoring.
-3) Weighted gene coexpression network analysis (WGCNA)
+2) Gene signature scoring.
+3) Weighted gene coexpression network analysis (WGCNA).
 4) Deconvolution of cell types.
+5) Machine learning and deep learning models.
 ___
 
 
 ![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
 
 **Figure 1. Directed acyclic graph of hypothesized variables impacting patient overall survival**
-I'll use this model to investigate overall survival in patients. Disease stage, patient sex, patient age, and sample tissue source are present in the sample metadata, so that will be straight forward to look at. While the metadata contains lists of treatment info, these are uninformative, so I'll have to ignore this for the purposes of this analysis. Infiltrate of different immune cell populations, cancer associated fibroblasts (CAFs), epithelial–mesenchymal status, cancer antigen expression, and sample purity are latent variables that I'll derive these from the RNA expression data. 
+I'll use this model to investigate overall survival in patients. Disease stage, patient sex, patient age, and sample tissue source are present in the sample metadata, so that will be straight forward to look at. While the metadata contains lists of treatment info, these are uninformative, so I'll have to ignore this for the purposes of this analysis. Infiltrate of different immune cell populations, cancer associated fibroblasts (CAFs), epithelial–mesenchymal status, cancer antigen expression, and sample purity are latent variables that I will derive  from the RNA expression data. 
 
 ___
 
