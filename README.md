@@ -18,7 +18,7 @@ ___
 ![alt text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/DAG.png?raw=true)  
 
 **Figure 1. Directed acyclic graph of hypothesized variables impacting patient overall survival**
-I'll use this model to investigate overall survival in patients. Disease stage, patient sex, and patient age are present in the sample metadata, so that will be straight forward to look at. While the metadata contains lists of treatment info, these are uninformative, so I'll have to ignore this for the purposes of this analysis. Infiltrate of different immune cell populations, cancer associated fibroblasts (CAFs), and epithelial–mesenchymal status are latent variables that I'll derive these from the RNA expression data. 
+I'll use this model to investigate overall survival in patients. Disease stage, patient sex, patient age, and sample tissue source are present in the sample metadata, so that will be straight forward to look at. While the metadata contains lists of treatment info, these are uninformative, so I'll have to ignore this for the purposes of this analysis. Infiltrate of different immune cell populations, cancer associated fibroblasts (CAFs), epithelial–mesenchymal status, cancer antigen expression, and sample purity are latent variables that I'll derive these from the RNA expression data. 
 
 ___
 
