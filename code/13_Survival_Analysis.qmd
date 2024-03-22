@@ -1,0 +1,189 @@
+---
+title: "Survival Analysis"
+format: html
+---
+
+```{r}
+
+library(survival)
+library(ggsurvfit)
+library(tidygraph)
+library(ggraph)
+library(dplyr)
+library(ggplot2)
+
+```
+
+# Import data
+```{r}
+
+#sample metadata
+source("functions/Load_Sample_Metadata.R")
+sample_metadata = load_sample_metadata("../data/sample_metadata.csv")
+rm(load_sample_metadata)
+
+#epi/mes scores
+emt_scores = read.csv("../outputs/epi_mes_signature_scores.csv", row.names = 1)
+rownames(emt_scores) = emt_scores[["Sample_ID"]]
+emt_scores = emt_scores[,-1]
+emt_scores = emt_scores[,7:9]
+
+#deconvolutions
+deconvolutions = read.csv("../outputs/deconvolution_epic.csv", row.names = 1)
+colnames(deconvolutions) = c("Bcell", "CAF", "CD4", "CD8", "Endothelial", "Macrophage", "NK", "Other_cells")
+
+```
+
+
+## Merge
+```{r}
+
+sample_data = sample_metadata |> 
+  mutate(stage = as.integer(case_when(
+        ajcc_pathologic_stage == "Stage 0" ~ "0",
+        ajcc_pathologic_stage == "Stage I" ~ "1",
+        ajcc_pathologic_stage == "Stage IA" ~ "1",
+        ajcc_pathologic_stage == "Stage IB" ~ "1",
+        ajcc_pathologic_stage == "Stage II" ~ "2",
+        ajcc_pathologic_stage == "Stage IIA" ~ "2",
+        ajcc_pathologic_stage == "Stage IIB" ~ "2",
+        ajcc_pathologic_stage == "Stage IIC" ~ "2",
+        ajcc_pathologic_stage == "Stage III" ~ "3",
+        ajcc_pathologic_stage == "Stage IIIA" ~ "3",
+        ajcc_pathologic_stage == "Stage IIIB" ~ "3",
+        ajcc_pathologic_stage == "Stage IIIC" ~ "3",
+        ajcc_pathologic_stage == "Stage IV" ~ "4"
+    ))) |>
+  dplyr::select(sample_id, tumor_descriptor, survial_censor, last_event, tissue_rollup, age_at_index, stage) |> 
+  merge(deconvolutions, by.x = "sample_id", by.y = "row.names") |> 
+  merge(emt_scores, by.x = "sample_id", by.y = "row.names") |> 
+  mutate(immune_score = Bcell + CD4 + CD8 + Macrophage + NK) |> 
+  mutate_at(c("tumor_descriptor", "tissue_rollup"), as.factor) |> 
+  dplyr::select(!c("Endothelial", "Other_cells", "SingScore_TotalScore", "Bcell", "CD4", "CD8", "Macrophage", "NK")) |> 
+  #two samples are missing age, and one sample is missing last_event
+  na.exclude()
+
+rownames(sample_data) = sample_data$sample_id
+sample_data = sample_data[,-1]
+
+str(sample_data)
+
+#clean up 
+rm(list = c("deconvolutions", "emt_scores", "sample_metadata"))
+
+```
+
+# Check for missing data
+```{r}
+
+skimr::skim(sample_data)
+
+```
+
+
+# Check for colinearity
+```{r}
+
+sample_data |> 
+  mutate(metastatic = ifelse(tumor_descriptor == "Metastatic", 1, 0),
+         cutaneous = ifelse(tissue_rollup == "Cutaneous", 1, 0),
+         lymph_node = ifelse(tissue_rollup == "Lymph_Nodes", 1, 0),
+         mucosal = ifelse(tissue_rollup == "Muscosal", 1, 0), #too few mucosal#
+         CNS = ifelse(tissue_rollup == "CNS", 1, 0),
+         organ = ifelse(tissue_rollup == "Organ", 1, 0)) |> 
+  dplyr::select(!c("tumor_descriptor", "tissue_rollup", "survial_censor", "last_event")) |> 
+  cor(use = "complete.obs") |> 
+  cor_plot()
+
+```
+
+
+
+# Cox Proportional hazards
+```{r}
+
+#coxph
+survival_results = sample_data |> 
+  dplyr::select(!c("tissue_rollup", "tumor_descriptor")) |> 
+  coxph(Surv(last_event, survial_censor) ~ ., data = _) 
+
+#Make a tidy table output ## NOT WORKING ##
+# survival_results |> 
+#   broom::tidy.coxph()
+
+#format results for graphing
+source("functions/Tidy_CoxPH_Stats.R")
+survival_stats = coxph_tidy_stats(survival_results)
+
+#clean up
+rm(list = c("coxph_tidy_stats"))
+
+```
+
+## Forest plot
+```{r}
+
+survival_stats |> 
+  dplyr::filter(variable_name != "CAF") |> 
+  ggplot(aes(x = hazard_ratio, y = variable_name, xmin = lower_95_CI, xmax = upper_95_CI, label = round(pval,4))) +
+    geom_point(size = 3) +
+    #geom_text(nudge_y = 0.2) +
+    geom_errorbarh(height=.1) +
+    geom_vline(xintercept = 1, linetype = "dashed") +
+    scale_y_discrete(labels = c(stage = "Disease Stage", 
+                              SingScore_mes_score = "Mesenchymal Score", 
+                              SingScore_epi_score = "Epithelial Score",
+                              immune_score = "Immune Score", 
+                              CAF = "Cancer Associated Fibroblasts", 
+                              age_at_index = "Patient Age")) +
+    labs(title = "Cox Proportional Hazards Regression",
+       x = "Hazard Ratio",
+       y = "")
+
+```
+
+### Inverted HR
+```{r}
+
+survival_stats |> 
+  #dplyr::filter(variable_name != "SingScore_mes_score") |> 
+  ggplot(aes(x = hazard_ratio_inverse, y = variable_name, xmin = lower_95_CI_inverse, xmax = upper_95_CI_inverse, label = round(pval,4))) +
+    geom_point(size = 3) +
+    #geom_text(nudge_y = 0.2) +
+    geom_errorbarh(height=.1) +
+    geom_vline(xintercept = 1, linetype = "dashed") +
+    scale_y_discrete(labels = c(stage = "Disease Stage", 
+                              SingScore_mes_score = "Mesenchymal Score", 
+                              SingScore_epi_score = "Epithelial Score",
+                              immune_score = "Immune Score", 
+                              CAF = "Cancer Associated Fibroblasts", 
+                              age_at_index = "Patient Age")) +
+    labs(title = "Cox Proportional Hazards Regression",
+       x = "Hazard Ratio",
+       y = "")
+
+```
+
+
+### Log scaled
+```{r}
+
+survival_stats |> 
+  #dplyr::filter(variable_name != "SingScore_TotalScore") |> 
+  ggplot(aes(x = log(hazard_ratio), y = variable_name, xmin = log(lower_95_CI), xmax = log(upper_95_CI), label = round(pval,4))) +
+    geom_point(size = 3) +
+    #geom_text(nudge_y = 0.2) +
+    geom_errorbarh(height=.1) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    scale_y_discrete(labels = c(stage = "Disease Stage", 
+                              SingScore_mes_score = "Mesenchymal Score", 
+                              SingScore_epi_score = "Epithelial Score",
+                              immune_score = "Immune Score", 
+                              CAF = "Cancer Associated Fibroblasts", 
+                              age_at_index = "Patient Age")) +
+    labs(title = "Cox Proportional Hazards Regression",
+       x = "Hazard Ratio",
+       y = "")
+
+```
+
