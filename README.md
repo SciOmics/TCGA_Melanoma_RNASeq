@@ -6,6 +6,8 @@ ___
 
 Goal: Determine variables impacting overall survival in melanoma patients. 
 
+Secondary Goal: Contrast primary vs metastatic samples. 
+
 Methods:
 1) Differential expression analysis.
 2) Gene signature scoring.
@@ -19,18 +21,6 @@ ___
 
 **Figure 1. Directed acyclic graph of hypothesized variables impacting patient overall survival**
 I'll use this model to investigate overall survival in patients. Disease stage, patient sex, patient age, and sample tissue source are present in the sample metadata, so that will be straight forward to look at. While the metadata contains lists of treatment info, these are uninformative, so I'll have to ignore this for the purposes of this analysis. Infiltrate of different immune cell populations, cancer associated fibroblasts (CAFs), epithelial–mesenchymal status, cancer antigen expression, and sample purity are latent variables that I will derive  from the RNA expression data. 
-
-___
-
-**Survival Models**
-
-| Independent Variable of Interest | Variable(s) to Adjust for |
-| --- | --- | 
-| Patient Age | None |
-| Patient Sex | None |
-| Immune Infiltrate | Disease Stage |
-| Disease Stage | None |
-| Epithelial-Mesenchymal Score | CAF Infiltration, Sample Purity |
 
 ___
 
@@ -51,11 +41,11 @@ ___
 
 
 **Table 1. Summary of the number of sample from different tissue sites.**
-There shouldn't be "Primary" samples from non-cutaneous tissues. These are mislabeled and will be removed. 
+There shouldn't be "Primary" samples from non-cutaneous tissues.  
 
 ___
   
-| Stage | Primary Sample Count | Metastatic Sample Count |
+| Stage | Primary\nSample Count | Metastatic\nSample Count |
 | --- | --- | --- |
 | 0 | 0 | 7 |
 | 1 | 1 | 29 |
@@ -247,4 +237,13 @@ ___
 ___
 
 
+**Survival Models**
+
+| Independent Variable of Interest | Variable(s) to Adjust for |
+| --- | --- | 
+| Patient Age | None |
+| Patient Sex | None |
+| Disease Stage | None |
+| Immune Infiltrate | Disease Stage |
+| Epithelial-Mesenchymal Score | CAF Infiltration, Sample Purity |
 
