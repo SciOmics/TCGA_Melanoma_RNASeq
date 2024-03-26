@@ -13,13 +13,13 @@ library(ggplot2)
 # DAG
 ```{r}
 
-survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infiltrate + Treatment + Sex + CAF_Infiltrate + Cancer_Antigens + Genetic_Programs,
-                      EMT_Score ~ Disease_Stage +  Tissue_Rollup + CAF_Infiltrate,
+survival_dag = dagify(Survival ~ EMT_Score + Disease_Stage + Age + Immune_Infiltrate + Treatment + Sex,
+                      EMT_Score ~ Sample_Purity + CAF_Infiltrate,
                       Treatment ~ Disease_Stage + Sample_Collection_Year,
-                      Immune_Infiltrate ~ Tissue_Rollup + Cancer_Antigens,
+                      Immune_Infiltrate ~ Cancer_Antigens,
                       Tissue_Rollup ~ Disease_Stage,
-                      Cancer_Antigens ~ Disease_Stage + Tissue_Rollup,
-                      Genetic_Programs ~ Disease_Stage + Tissue_Rollup + Immune_Infiltrate + CAF_Infiltrate,
+                      Cancer_Antigens ~ Disease_Stage,
+                      Sample_Purity ~ Tissue_Rollup + Immune_Infiltrate + CAF_Infiltrate,
                       labels = c("Survival" = "Survival",
                                  "EMT_Score" = "EMT\nScore",
                                  "Disease_Stage" = "Disease Stage",
@@ -105,25 +105,17 @@ ggdag_adjustment_set(survival_dag,
   theme_dag_blank() +
   ggtitle("Patient Age")
 
-#CAF
+#Sex
 ggdag_adjustment_set(survival_dag,
-                     exposure = c("CAF_Infiltrate"),
+                     exposure = c("Sex"),
                      outcome = "Survival",
                      text_col = "black",
                      text = FALSE,
                      use_labels = "label") +
   theme_dag_blank() +
-  ggtitle("Cancer Associated Fibroblasts")
+  ggtitle("Patient Sex")
 
-#Cancer Antigens
-ggdag_adjustment_set(survival_dag,
-                     exposure = c("Cancer_Antigens"),
-                     outcome = "Survival",
-                     text_col = "black",
-                     text = FALSE,
-                     use_labels = "label") +
-  theme_dag_blank() +
-  ggtitle("Cancer Antigen Expression")
+
 
 ```
 
