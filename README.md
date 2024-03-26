@@ -45,7 +45,7 @@ There shouldn't be "Primary" samples from non-cutaneous tissues.
 
 ___
   
-| Stage | Primary\nSample Count | Metastatic\nSample Count |
+| Stage | Primary Sample Count | Metastatic Sample Count |
 | --- | --- | --- |
 | 0 | 0 | 7 |
 | 1 | 1 | 29 |
@@ -172,6 +172,11 @@ ___
 
 **Figure X. Hazard ratios of overall survival based on WGCNA module eigenvalues.**
 
+___
+
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/hub_genes_survival.png?raw=true)  
+
+**Figure X. Overall survival based on WGCNA module hub genes.**
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/wgcna_pathways.png?raw=true)  

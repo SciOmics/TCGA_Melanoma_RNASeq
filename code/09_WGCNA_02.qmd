@@ -184,18 +184,27 @@ rm(list = c("module_enrichment"))
 ### Save
 ```{r}
 
-png(filename = "../outputs/plots/wgcna_pathways.png", height = 800, width = 1500, res = 120)
+#associated with survival
+png(filename = "../outputs/plots/wgcna_pathways.png", height = 1200, width = 2000, res = 120)
 ggarrange(plots[["yellow"]],
           plots[["tan"]],
+          plots[["salmon"]],
+          plots[["pink"]],
           plots[["greenyellow"]],
+          plots[["cyan"]],
           plots[["brown"]])
 dev.off()
 
-png(filename = "../outputs/plots/wgcna_pathways_primary_vs_met.png", height = 800, width = 1500, res = 120)
-ggarrange(plots[["red"]],
-          plots[["magenta"]],
+#associated with primary vs met.
+png(filename = "../outputs/plots/wgcna_pathways_primary_vs_met.png", height = 1200, width = 2000, res = 120)
+ggarrange(plots[["turquoise"]],
+          plots[["red"]],
           plots[["purple"]],
-          plots[["turquoise"]])
+          plots[["pink"]],
+          plots[["magenta"]],
+          plots[["greenyellow"]],
+          plots[["brown"]],
+          plots[["black"]])
 dev.off()
 
 ```
@@ -418,7 +427,6 @@ rm(plots)
 
 ```
 
-
 ## Mutivariable Models
 ```{r}
 
@@ -450,6 +458,60 @@ extractAIC(survival_models$optimized_model)
 BIC(survival_models$intercept_only)
 BIC(survival_models$full_model)
 BIC(survival_models$optimized_model)
+
+```
+
+
+## Hub genes
+
+### KM Plots
+```{r}
+
+#load hub genes
+hub_genes = read.csv("../outputs/hub_genes.csv")
+
+#plotting function
+plot_survival = function(gene) {
+  
+  module_name = hub_genes |> 
+    dplyr::filter(Top_Hub_Gene == gene) |> 
+    pull(X)
+  
+  normalized_data |> 
+    dplyr::select(gene) |> 
+    merge(sample_metadata, by = "row.names") |> 
+    dplyr::filter(tissue_rollup == "Cutaneous") |> 
+    mutate(group = ifelse(.data[[gene]] > median(.data[[gene]]), "high", "low")) |> 
+    survfit2(Surv(last_event, survial_censor) ~ group , data = _) |>
+    ggsurvfit() +
+      #add_risktable(risktable_stats = "n.risk") +
+      #add_pvalue() +
+      ggtitle(paste0("Module: ", module_name, "\nHub Gene: ", gene))
+}
+
+#plots
+plots = lapply(hub_genes$Top_Hub_Gene, plot_survival)
+names(plots) = hub_genes$X
+
+#clean up
+rm(list = c("plot_survival", "hub_genes"))
+
+
+```
+
+
+#### Save
+```{r}
+
+png(filename = "../outputs/plots/hub_genes_survival.png", height = 1000, width = 1200, res = 120)
+ggarrange(plots[["yellow"]],
+          plots[["tan"]],
+          plots[["salmon"]],
+          plots[["pink"]],
+          plots[["greenyellow"]],
+          plots[["cyan"]],
+          plots[["brown"]])
+dev.off()
 
 ```
 
