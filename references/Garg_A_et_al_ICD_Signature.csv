@@ -1,0 +1,35 @@
+Molecule,Human Gene,Effect on ICD-associated anticancer immunity,Experimental System,Putative Prediction (based on experimental data) for Clinical Survival/ prognosis if molecules show high expression#,Increased_Decreased_in_ICD
+CD39,ENTPD1,Overexpression compromised ICD63,Mice,Poor,Decreased
+CD73,NT5E,Overexpression compromised ICD64,Mice,Poor,Decreased
+CRT,CALR,"Ablation compromised ICD17-19,65",Mice,Good,Increased
+HMGB1,HMGB1,Ablation compromised ICD22,Mice,Good,Increased
+HSP90,HSP90AA1,Inhibition compromised ICD66,Human,Good,Increased
+ATG5,ATG5,"Ablation compromised Chemotherapy-induced ICD;21,27 Ablation enhanced Hyp-PDT induced ICD;16",Mice Human,Context-dependent,Increased
+BAX,BAX,"Ablation compromised Chemotherapy-induced ICD and partially but not completely Hyp-PDT induced ICD17,18",Mice,Context-dependent,Increased
+Caspase-8,CASP8,"Ablation compromised Chemotherapy-induced ICD but not Hyp-PDT induced ICD17,18",Mice,Context-dependent,Increased
+ERp57,PDIA3,"Ablation compromised Chemotherapy-induced ICD but not Hyp-PDT induced ICD67,68",Mice,Context-dependent,Increased
+PERK,EIF2AK3,"Ablation compromised Chemotherapy-induced ICD and Hyp-PDT induced ICD; Considered a “core” component;17,18,69",Mice,Good,Increased
+PI3K p110α,PIK3CA,Ablation compromised Chemotherapy-induced ICD and Hyp-PDT induced ICD; Considered a ‘core’ component;17,Mice,Good,Increased
+CXCR3,CXCR3,Ablation compromised ICD1,Mice,Good,Increased
+IFNα/β,IFNA1,"Increased amount enhanced ICD1,70",Mice,Good,Increased
+IFNα/β,IFNB1,"Increased amount enhanced ICD1,70",Mice,Good,Increased
+IL-10,IL10,"Low IL10 associated with enhanced ICD16,17,71-73",Mice/Human,Poor,Decreased
+IL-6,IL6,"High IL6 associated with enhanced ICD16, 17,72,73",Mice/Human,Good,Increased
+TNF,TNF,High TNF associated with enhanced ICD73,Mice/Human,Good,Increased
+Caspase 1,CASP1,Ablation compromised ICD74,Mice,Good,Increased
+IL1 Receptor,IL1R1,Ablation compromised ICD74,Mice,Good,Increased
+IL1β,IL1B,Ablation compromised ICD74,Mice,Good,Increased
+Nlrp3,NLRP3,Ablation compromised ICD74,Mice,Good,Increased
+P2X7 Receptor,P2RX7,Ablation compromised ICD74,Mice,Good,Increased
+Ly96,LY96,Ablation compromised ICD22,Mice,Good,Increased
+Myd88,MYD88,Ablation compromised ICD22,Mice,Good,Increased
+TLR4,TLR4,Ablation compromised ICD22,Mice,Good,Increased
+CD4+ T cells,CD4,"Depletion of these cells compromised ICD1, 22,25-27,71",Mice,Good,Increased
+CD8+ T cells,CD8A,"Depletion of these cells compromised ICD1, 22,25-27,71,75",Mice,Good,Increased
+CD8+ T cells,CD8B,"Depletion of these cells compromised ICD1, 22,25-27,71,75",Mice,Good,Increased
+Foxp3+ Treg cells,FOXP3,"Decreased amount associated with enhanced ICD72,73",Mice,Poor,Decreased
+IFNγ,IFNG,Ablation compromised ICD22,Mice,Good,Increased
+IFNγ Receptor,IFNGR1,Ablation compromised ICD22,Mice,Good,Increased
+IL-17A,IL17A,Ablation compromised ICD25,Mice,Good,Increased
+IL-17A Receptor,IL17RA,Ablation compromised ICD25,Mice,Good,Increased
+Prf1,PRF1,Ablation compromised ICD74,Mice,Good,Increased

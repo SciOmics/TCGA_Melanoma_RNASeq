@@ -499,8 +499,143 @@ ggplot(gene_signature_results, aes(x = ssGSEA_patient_mes_score, y = SingScore_m
 
 ```
 
+# ...
+
 # Bayesian statistics on Singscore values - primary vs met
 ```{r}
 
 ```
 
+# Cancer Testis Antigen Signature
+```{r}
+
+#import signature
+CT_antigens = read.csv("../references/CT_Antigens.csv")
+
+#rank data
+ranked_df = rankGenes(t(normalized_data))
+#run singscore
+ss_CT_signature = simpleScore(ranked_df, 
+                               upSet = CT_antigens$Member)
+
+#add sample metadata
+ss_CT_signature = merge(ss_CT_signature, 
+                     sample_metadata, 
+                     by.x = "row.names",
+                     by.y = "sample_id")
+
+#Cox regression results treating score as continuous
+cox_results = ss_CT_signature |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
+  coxph(Surv(last_event, survial_censor) ~ TotalScore + age_at_index + stage, data = _) |> 
+  summary()
+
+cox_results
+
+```
+
+
+# Chemokine Signature
+```{r}
+
+#import signature
+chemokine_signature = read.csv("../references/Chemokines.csv")
+
+#rank data
+ranked_df = rankGenes(t(normalized_data))
+#run singscore
+ss_chemokine_signature = simpleScore(ranked_df, 
+                               upSet = chemokine_signature |>  dplyr::filter(Role == "Activating") |> pull(Gene), 
+                               downSet = chemokine_signature |>  dplyr::filter(Role == "Suppressive") |> pull(Gene))
+
+#add sample metadata
+ss_chemokine_signature = merge(ss_chemokine_signature, 
+                     sample_metadata, 
+                     by.x = "row.names",
+                     by.y = "sample_id")
+
+#plot
+ggplot(ss_chemokine_signature, aes(x = DownScore, y = UpScore, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Suppressive Chemokines Score", y = "Activating Chemokines Score", title = "Chemokines SingScore Signature") +
+  theme_classic()
+
+#Cox regression results treating score as continuous
+cox_results = ss_chemokine_signature |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
+  coxph(Surv(last_event, survial_censor) ~ TotalScore + age_at_index + stage, data = _) |> 
+  summary()
+
+cox_results
+
+#KM plot
+ss_chemokine_signature |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
+  mutate(median_division = ifelse(TotalScore > median(TotalScore), "High", "Low")) |> 
+  survfit2(Surv(last_event, survial_censor) ~ median_division , data = _) |>
+  ggsurvfit() +
+    scale_color_manual(values = palette_discrete[c(5,1)],labels = c('Low', 'High')) +
+    ggtitle("Chemokine Score", subtitle = "Stratified at median\nFiltered to cutaneous only samples")
+
+
+```
+
+
+#ICD Signature
+```{r}
+
+#import signature
+ICD_markers = read.csv("../references/Garg_A_et_al_ICD_Signature.csv")
+
+#rank data
+ranked_df = rankGenes(t(normalized_data))
+#run singscore
+ss_ICD_signature = simpleScore(ranked_df, 
+                               upSet = ICD_markers |>  dplyr::filter(Increased_Decreased_in_ICD == "Increased") |>  dplyr::filter(Human.Gene != c("CD8A", "CD8B", "CD4", "FOXP3")) |>  pull(Human.Gene), 
+                               downSet = ICD_markers |>  dplyr::filter(Increased_Decreased_in_ICD == "Decreased") |>  dplyr::filter(Human.Gene != c("CD8A", "CD8B", "CD4", "FOXP3")) |>  pull(Human.Gene))
+
+#add sample metadata
+ss_ICD_signature = merge(ss_ICD_signature, 
+                     sample_metadata, 
+                     by.x = "row.names",
+                     by.y = "sample_id")
+
+#plot
+ggplot(ss_ICD_signature, aes(x = DownScore, y = UpScore, color = tumor_descriptor)) +
+  geom_point() +
+  scale_color_manual(values = c(palette_discrete[1], palette_discrete[5])) +
+  labs(x = "Score of ICD Decreased Genes", y = "Score of ICD Increased Genes", title = "Immunogenic Cell Death SingScore Signature") +
+  theme_classic()
+
+
+
+
+```
+
+
+### Survival 
+```{r}
+
+#Cox regression results treating score as continuous
+cox_results = ss_ICD_signature |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
+  coxph(Surv(last_event, survial_censor) ~ TotalScore + age_at_index + stage, data = _) |> 
+  summary()
+
+cox_results
+
+ggplot(ss_ICD_signature, aes(x = TotalScore)) +
+  geom_histogram()
+
+#KM plot
+ss_ICD_signature |> 
+  dplyr::filter(tissue_rollup == "Cutaneous") |> 
+  mutate(median_division = ifelse(TotalScore > median(TotalScore), "High", "Low")) |> 
+  survfit2(Surv(last_event, survial_censor) ~ median_division , data = _) |>
+  ggsurvfit() +
+    scale_color_manual(values = palette_discrete[c(5,1)],labels = c('Low', 'High')) +
+    ggtitle("ICD Score", subtitle = "Stratified at median\nFiltered to cutaneous only samples")
+
+
+```
