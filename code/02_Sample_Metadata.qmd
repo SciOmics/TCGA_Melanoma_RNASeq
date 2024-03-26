@@ -55,7 +55,22 @@ sample_metadata = sample_metadata |>
     #censor for survival
     dplyr::mutate(survial_censor = as.integer(ifelse(is.na(days_to_death) == TRUE, "0", "1"))) |> 
     #days until last follow up or death
-    dplyr::mutate(last_event = ifelse(survial_censor == "1", days_to_death, days_to_last_follow_up))
+    dplyr::mutate(last_event = ifelse(survial_censor == "1", days_to_death, days_to_last_follow_up)) |> 
+    dplyr::mutate(stage = as.integer(case_when(
+        ajcc_pathologic_stage == "Stage 0" ~ "0",
+        ajcc_pathologic_stage == "Stage I" ~ "1",
+        ajcc_pathologic_stage == "Stage IA" ~ "1",
+        ajcc_pathologic_stage == "Stage IB" ~ "1",
+        ajcc_pathologic_stage == "Stage II" ~ "2",
+        ajcc_pathologic_stage == "Stage IIA" ~ "2",
+        ajcc_pathologic_stage == "Stage IIB" ~ "2",
+        ajcc_pathologic_stage == "Stage IIC" ~ "2",
+        ajcc_pathologic_stage == "Stage III" ~ "3",
+        ajcc_pathologic_stage == "Stage IIIA" ~ "3",
+        ajcc_pathologic_stage == "Stage IIIB" ~ "3",
+        ajcc_pathologic_stage == "Stage IIIC" ~ "3",
+        ajcc_pathologic_stage == "Stage IV" ~ "4"
+    )))
 
 #with(sample_metadata, table(site_of_resection_or_biopsy, tissue_rollup))
 
