@@ -1,0 +1,181 @@
+---
+title: "Differential Expression Survival Analysis"
+format: html
+---
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+
+```
+
+# Color palette
+```{r}
+
+palette_discrete = wes_palette("Darjeeling1", 5, type = "discrete")
+wes_palette("Darjeeling1", 5, type = "discrete")
+
+palette_continuous = wes_palette("Zissou1", 100, type = "continuous")
+wes_palette("Zissou1", 100, type = "continuous")
+
+```
+
+
+# Load Data
+```{r}
+
+#normalized expression data
+source("functions/Load_Normalized_Expression.R")
+normalized_data = load_normalized_expression("../outputs/normalized_expression.csv")
+rm(load_normalized_expression)
+
+#sample metadata
+source("functions/Load_Sample_Metadata.R")
+sample_metadata = load_sample_metadata("../data/sample_metadata.csv")
+rm(load_sample_metadata)
+
+```
+
+## Stage as integer
+```{r}
+
+sample_metadata = sample_metadata |> 
+    mutate(stage = as.integer(case_when(
+        ajcc_pathologic_stage == "Stage 0" ~ "0",
+        ajcc_pathologic_stage == "Stage I" ~ "1",
+        ajcc_pathologic_stage == "Stage IA" ~ "1",
+        ajcc_pathologic_stage == "Stage IB" ~ "1",
+        ajcc_pathologic_stage == "Stage II" ~ "2",
+        ajcc_pathologic_stage == "Stage IIA" ~ "2",
+        ajcc_pathologic_stage == "Stage IIB" ~ "2",
+        ajcc_pathologic_stage == "Stage IIC" ~ "2",
+        ajcc_pathologic_stage == "Stage III" ~ "3",
+        ajcc_pathologic_stage == "Stage IIIA" ~ "3",
+        ajcc_pathologic_stage == "Stage IIIB" ~ "3",
+        ajcc_pathologic_stage == "Stage IIIC" ~ "3",
+        ajcc_pathologic_stage == "Stage IV" ~ "4"
+    )))
+
+```
+
+# Differential expression - survival
+```{r}
+
+#vector of genes
+genes = colnames(normalized_data)
+
+#function
+cox_regression = function(gene){
+  
+  forumula = as.formula(paste0("Surv(last_event, survial_censor) ~ age_at_index + stage + ", paste(gene)))
+  
+  normalized_data |> 
+    merge(sample_metadata, by = "row.names") |> 
+    coxph(forumula, data = _) 
+}
+
+#test
+#cox_regression("ENSG00000000005")
+
+#apply function
+coxph_results = lapply(genes, cox_regression)
+
+#multicore
+# coxph_results = parallel::mclapply(genes, 
+#                    cox_regression, 
+#                    mc.cores = 12)
+
+
+```
+
+## Extract statistics
+```{r}
+
+#import function
+source("functions/Tidy_CoxPH_Stats.R")
+coxph_tidy_stats(coxph_results[[1]])
+
+#apply function
+coxph_results_df = lapply(coxph_results, coxph_tidy_stats)
+
+#turn into dataframe
+coxph_results_df = do.call(rbind.data.frame, coxph_results_df)
+
+#remove age and stage variables
+coxph_results_df = coxph_results_df |> 
+  dplyr::filter(variable_name != "stage") |> 
+  dplyr::filter(variable_name != "age_at_index") 
+
+#add adjusted p-values
+adjusted_pvals = p.adjust(coxph_results_df$pval, "fdr")
+coxph_results_df$pval_fdr_adjusted = adjusted_pvals
+
+```
+
+### Save
+```{r}
+
+write.csv(coxph_results_df, file = "../outputs/differential_expression_survival.csv")
+
+```
+
+
+## Volcano plot 
+```{r}
+
+labels = coxph_results_df |> 
+  #dplyr::arrange(pval_fdr_adjusted) |> 
+  mutate(product = pval_fdr_adjusted * 1/abs(log2(hazard_ratio))) |> 
+  slice_min(product, n = 10) |> 
+  pull(variable_name)
+
+coxph_results_df |> 
+  mutate(coloring = case_when(
+    (hazard_ratio > 1.2 | hazard_ratio < 0.833) & pval_fdr_adjusted < 0.01 ~ "2",
+    (hazard_ratio < 1.2 | hazard_ratio > 0.833) & pval_fdr_adjusted < 0.01 ~ "1",
+    (hazard_ratio > 1.2 | hazard_ratio < 0.833) & pval_fdr_adjusted > 0.01 ~ "1",
+    .default = "0"
+  )) |> 
+ggplot(aes(x = log2(hazard_ratio), y = log(pval_fdr_adjusted), color = coloring)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = log(0.01), linetype = "dashed", color = "black") +
+  geom_vline(xintercept = log2(0.833), linetype = "dashed", color = "black") +
+  geom_vline(xintercept = log2(1.2), linetype = "dashed", color = "black") +
+  #geom_text(aes(label = labels))
+  ylim(0, min(log(coxph_results_df$pval_fdr_adjusted))) +
+  labs(x = "Log2 Hazard Ratio", y = "Log FDR Adjusted p-Value") +
+  scale_color_manual(values = palette_discrete[c(2, 3, 1)]) +
+  theme(legend.position = "none")
+
+```
+
+#...
+
+
+```{r}
+
+#try fitting full model
+options(expressions = 5e5)
+
+full_model = 
+  sample_metadata |> 
+    dplyr::select(last_event, survial_censor, age_at_index, stage) |> 
+    merge(normalized_data, by = "row.names") |> 
+    dplyr::select(!c("Row.names")) |>
+    coxph(Surv(last_event, survival_censor) ~ ., data = _) 
+
+cox_regression = function(gene){
+  
+  forumula = as.formula(paste0("Surv(last_event, survial_censor) ~ age_at_index + stage + ", paste(gene)))
+  
+  normalized_data |> 
+    merge(sample_metadata, by = "row.names") |> 
+    coxph(forumula, data = _) 
+}
+
+
+
+
+```
+
