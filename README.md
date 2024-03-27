@@ -6,8 +6,6 @@ ___
 
 Goal: Determine variables impacting overall survival in melanoma patients. 
 
-Secondary Goal: Contrast primary vs metastatic samples. 
-
 Methods:
 1) Differential expression analysis.
 2) Gene signature scoring.
@@ -62,7 +60,7 @@ ___
 | 4 | 3 | 21 |
 
 **Table 2. Summary of the number of samples from disease stages.**
-There shouldn't be metastatic samples labeled Stage 0 or stage 1, and probably not stage 2 either. This is concerning. I could eliminate early stage samples, but this would substaintally lower our sample size. I'll leave these samples in for now and see how they related to other samples in a PCA. 
+There shouldn't be metastatic samples labeled Stage 0 or stage 1, and probably not stage 2 either. This is concerning.
 
 ___
 
@@ -76,7 +74,7 @@ ___
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/survival_by_age.png?raw=true)  
 
 **Figure 3. Overall survival by patient age.**
-Patients who are older have decreased overall survival probability. The top plot shows shows patient age as a continuous variable vs. the date of last followup from the index date. Be careful in interpretting this plot given that many of these data are censored (black dots). A Cox regression shows a stastically significant relationship between overall survival and patient age. The bottom plot is a different visualization of these data, showing surival curves based on binned ages. 
+Patients who are older have decreased overall survival probability. The top plot shows shows patient age as a continuous variable vs. the date of last followup from the index date. Be careful in interpretting this plot given that many of these data are censored (black dots). A Cox regression shows a stastically significant relationship between overall survival and patient age (95% CI of hazard ratio: 1.011 to 1.031). Keep in mind, the hazard ratio is per each additional year of age. The bottom plot is a different visualization of these data, showing surival curves based on binned ages. 
 
 ___
 
@@ -110,7 +108,7 @@ ___
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/volcano_plot.png?raw=true)  
 
 **Figure 7. Volcano plot: primary vs. metastatic samples.**
-Genes to the left side of the plot are increased in expression in primary samples, while those on the left are increased in metastatic samples.
+Genes to the left side of the plot are increased in expression in primary samples, while those on the right are increased in metastatic samples.
 
 ___
 
