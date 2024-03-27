@@ -12,6 +12,7 @@ library(mixOmics)
 library(wesanderson)
 library(ggsurvfit)
 library(ggpubr)
+library(survival)
 
 ```
 
@@ -64,11 +65,15 @@ plot1 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, label = sampl
     scale_color_manual(values = palette_discrete[c(5,1)]) +
     theme_classic()
 
+plot1
+
 #Plot colored by primary/met
 plot2 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = tumor_descriptor)) +
     geom_point(size = 4) +
     scale_color_manual(values = palette_discrete[c(5,1)]) +
     theme_classic()
+
+plot2
 
 #Plot colored by tissue
 plot3 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = tissue_rollup, shape = tumor_descriptor)) +
@@ -76,18 +81,32 @@ plot3 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = tissu
     scale_color_manual(values = palette_discrete) +
     theme_classic()
 
+plot3
+
 #Plot colored by stage
-plot4 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = ajcc_pathologic_stage, shape = tumor_descriptor)) +
+plot4 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = ajcc_pathologic_stage)) +
     geom_point(size = 4) +
     scale_color_manual(values = wes_palette("Zissou1", 13, type = "continuous")) +
     theme_classic()
 
-png(file = "../outputs/plots/pca_plots.png", height = 850, width = 1000, res = 80)
-ggarrange(plot1, plot2, plot3, plot4, 
-          labels = c("A", "B", "C", "D"),
+plot4
+
+#Plot colored by age
+plot5 = ggplot(as.data.frame(pca_results$x), aes(x = PC1, y = PC2, color = age_at_index)) +
+    geom_point(size = 4) +
+    scale_colour_gradient(low = palette_continuous[1], high = palette_continuous[89]) +
+    theme_classic() +
+    labs(color = "Age")
+
+plot5
+
+png(file = "../outputs/plots/pca_plots.png", height = 800, width = 1200, res = 80)
+ggarrange(plot1, plot2, plot3, plot4, plot5,
+          labels = c("A", "B", "C", "D", "E"),
           nrow = 2,
-          ncol = 2)
+          ncol = 3)
 dev.off()
+
 
 #clean up 
 rm(list = c("plot1", "plot2", "plot3", "plot4"))
@@ -150,7 +169,7 @@ sample_metadata = sample_metadata |>
     )))
 
 #Survival plot
-png(filename = "../outputs/plots/survival_plot_stage.png", height = 600, width = 800, res = 200)
+#png(filename = "../outputs/plots/survival_plot_stage.png", height = 600, width = 800, res = 200)
 sample_metadata |> 
     dplyr::filter(stage != "0") |> 
     survfit2(Surv(last_event, survial_censor) ~ stage , data = _) |>
@@ -160,7 +179,7 @@ sample_metadata |>
     ggtitle(label = "Overall Survival by Disease Stage") +
     xlab ("Days") +
     scale_color_manual(values = palette_discrete[c(5,2,3,1)])
-dev.off()
+#dev.off()
 
 ```
 
@@ -171,6 +190,8 @@ dev.off()
 #Cox regression results treating age as continuous
 cox_results = coxph(Surv(last_event, survial_censor) ~ age_at_index , data = sample_metadata) |> 
     summary()
+
+cox_results
 
 #continuous scale plot
 p1 = ggplot(sample_metadata, aes(x = age_at_index, y = last_event, color = as.factor(survial_censor))) +
@@ -201,10 +222,10 @@ p2 = sample_metadata |>
     scale_color_manual(values = palette_continuous[c(1, 16, 32, 48, 64, 80, 96)])
 
 #plot
-png(filename = "../outputs/plots/survival_by_age.png", height = 1000, width = 1200, res = 120)
+#png(filename = "../outputs/plots/survival_by_age.png", height = 1000, width = 1200, res = 120)
 ggarrange(p1, p2,
           nrow = 2)
-dev.off()
+#dev.off()
 
 #clean up
 rm(list = c("cox_results", "p1", "p2"))
@@ -216,20 +237,20 @@ rm(list = c("cox_results", "p1", "p2"))
 ## Sex 
 ```{r}
 
-png(filename = "../outputs/plots/survival_by_sex.png", height = 600, width = 800, res = 200)
+#png(filename = "../outputs/plots/survival_by_sex.png", height = 600, width = 800, res = 200)
 sample_metadata |> 
     survfit2(Surv(last_event, survial_censor) ~ gender , data = _) |>
     ggsurvfit() +
-    add_risktable(risktable_stats = "n.risk") +
+    #add_risktable(risktable_stats = "n.risk") +
     add_pvalue() +
     ggtitle(label = "Overall Survival by Patient Sex") +
     xlab ("Days")
-dev.off()
+#dev.off()
 
 ```
 
 
-### Subset samples to more recent samples
+### Subset samples to more recent samples? - No
 ```{r}
 
 ggplot(sample_metadata, aes(x = year_of_diagnosis)) +
