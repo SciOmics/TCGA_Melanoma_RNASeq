@@ -339,10 +339,12 @@ ss_patient_signature |>
 ```{r}
 
 #Cox regression results treating score as continuous
-cox_results = sample_metadata |> 
+cox_results = ss_patient_signature |> 
   dplyr::filter(tissue_rollup == "Cutaneous") |> 
-  coxph(Surv(last_event, survial_censor) ~ age_at_index , data = _) |> 
+  coxph(Surv(last_event, survial_censor) ~ TotalScore + age_at_index + stage, data = _) |> 
   summary()
+
+cox_results
 
 png(filename = "../outputs/plots/survival_by_singscore.png", height = 400, width = 800, res = 120)
 ss_patient_signature |> 
@@ -350,12 +352,12 @@ ss_patient_signature |>
   ggplot(aes(x = TotalScore, y = last_event, color = as.factor(survial_censor))) +
   geom_point() +
   scale_color_manual(values = c("grey", "black"),labels = c('Censored', 'Not Censored')) +
-  labs(color = "", y = "Days from index", x = "SingScore", title = "Overall Survival by Epithelial–Mesenchymal Score", subtitle = "filtered to cutaneous samples") +
-  annotate("text", x = 0, y = 9000, label = paste0("HR: ", round(cox_results$coefficients[2], 4), "\np-value: ", round(cox_results$coefficients[5], 5)))
+  labs(color = "", y = "Days from index", x = "SingScore", title = "Overall Survival by Epithelial–Mesenchymal Score", subtitle = "Filtered to cutaneous samples") +
+  annotate("text", x = 0, y = 9000, label = paste0("HR: ", round(cox_results$coefficients[1,2],5), "\np-value: ", round(cox_results$coefficients[1,5], 5)))
 dev.off()
 
 #clean up
-rm(cox_results)
+#rm(cox_results)
 
 ```
 
