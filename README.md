@@ -104,17 +104,24 @@ There does indeed appear to be some seperating along PC1 and PC2, and maybe a bi
 
 ___
 
+![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/pca_primary_mets.png?raw=true)  
+
+**Figure 7. Comparing primary and metastatic sample principal components.**
+It is more clear what principal compenents have separation between primary vs metastatic samples if we look at PCs individually. There does appear to be varying magnitudes of separation up to PC6. 
+
+___
+
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/volcano_plot.png?raw=true)  
 
-**Figure 7. Volcano plot: primary vs. metastatic samples.**
+**Figure 8. Volcano plot: primary vs. metastatic samples.**
 Genes to the left side of the plot are increased in expression in primary samples, while those on the right are increased in metastatic samples.
 
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/gene_expression_plots.png?raw=true)  
 
-**Figure 8. Gene expression: primary vs. metastatic samples.**
+**Figure 9. Gene expression: primary vs. metastatic samples.**
 KRT6B = Keratin 6B
 C7: Complement component 7 
 
@@ -123,13 +130,13 @@ ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/GSEA.png?raw=true)  
 
-**Figure 9. Gene set enrichment analysis: primary vs. metastatic samples.**
+**Figure 10. Gene set enrichment analysis: primary vs. metastatic samples.**
 
 ___
 
 ![alt_text](https://github.com/SciOmics/TCGA_Melanoma_RNASeq/blob/main/outputs/plots/Epi_Mes_scores.png?raw=true)  
 
-**Figure 10. Epithelial–Mesenchymal scores.** 
+**Figure 11. Epithelial–Mesenchymal scores.** 
 Samples were scored using epithelial and mesenchymal gene signatures from [Tan TZ, et al. EMBO Mol Med. 2014.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4287932/) (cleaned csv version available in the references folder) by GSEA, ssGSEA, and SingScore. ssGSEA and Singscore produced highly similar results, with metastatic samples predominately being low in epithelial scores. GSVA scoring produced a wider spread in the epithelial scores of metastatic samples. Likewise, primary samples scored low in the mesenchymal signature for ssGSEA and SingScore, but GSVA again had a wide spread. 
 
 ___

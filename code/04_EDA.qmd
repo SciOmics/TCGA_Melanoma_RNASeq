@@ -145,6 +145,93 @@ rm(list = c("plot1", "plot2"))
 
 ```
 
+### Beeswarm plots
+```{r}
+
+plot1 =  as.data.frame(pca_results$x) |> 
+    dplyr::filter(tissue_rollup == "Cutaneous") |> 
+    ggplot(aes(x = tumor_descriptor, y = PC1, color = tumor_descriptor)) +
+        geom_jitter(size = 1, width = 0.2) +
+        stat_summary(fun = "mean", geom = "crossbar", color = "black", width = 0.3) +
+        scale_color_manual(values = palette_discrete[c(5,1)]) +
+        labs(x = "") +
+        theme_classic() +
+        theme(legend.position = "none")
+
+plot1
+
+plot2 =  as.data.frame(pca_results$x) |> 
+    dplyr::filter(tissue_rollup == "Cutaneous") |> 
+    ggplot(aes(x = tumor_descriptor, y = PC2, color = tumor_descriptor)) +
+        geom_jitter(size = 1, width = 0.2) +
+        stat_summary(fun = "mean", geom = "crossbar", color = "black", width = 0.3) +
+        scale_color_manual(values = palette_discrete[c(5,1)]) +
+        labs(x = "") +
+        theme_classic() +
+        theme(legend.position = "none")
+
+plot2
+
+plot3 =  as.data.frame(pca_results$x) |> 
+    dplyr::filter(tissue_rollup == "Cutaneous") |> 
+    ggplot(aes(x = tumor_descriptor, y = PC3, color = tumor_descriptor)) +
+        geom_jitter(size = 1, width = 0.2) +
+        stat_summary(fun = "mean", geom = "crossbar", color = "black", width = 0.3) +
+        scale_color_manual(values = palette_discrete[c(5,1)]) +
+        labs(x = "") +
+        theme_classic() +
+        theme(legend.position = "none")
+
+plot3
+
+plot4 =  as.data.frame(pca_results$x) |> 
+    dplyr::filter(tissue_rollup == "Cutaneous") |> 
+    ggplot(aes(x = tumor_descriptor, y = PC4, color = tumor_descriptor)) +
+        geom_jitter(size = 1, width = 0.2) +
+        stat_summary(fun = "mean", geom = "crossbar", color = "black", width = 0.3) +
+        scale_color_manual(values = palette_discrete[c(5,1)]) +
+        labs(x = "") +
+        theme_classic() +
+        theme(legend.position = "none")
+
+plot4
+
+plot5 =  as.data.frame(pca_results$x) |> 
+    dplyr::filter(tissue_rollup == "Cutaneous") |> 
+    ggplot(aes(x = tumor_descriptor, y = PC5, color = tumor_descriptor)) +
+        geom_jitter(size = 1, width = 0.2) +
+        stat_summary(fun = "mean", geom = "crossbar", color = "black", width = 0.3) +
+        scale_color_manual(values = palette_discrete[c(5,1)]) +
+        labs(x = "") +
+        theme_classic() +
+        theme(legend.position = "none")
+
+plot5
+
+plot6 =  as.data.frame(pca_results$x) |> 
+    dplyr::filter(tissue_rollup == "Cutaneous") |> 
+    ggplot(aes(x = tumor_descriptor, y = PC6, color = tumor_descriptor)) +
+        geom_jitter(size = 1, width = 0.2) +
+        stat_summary(fun = "mean", geom = "crossbar", color = "black", width = 0.3) +
+        scale_color_manual(values = palette_discrete[c(5,1)]) +
+        labs(x = "") +
+        theme_classic() +
+        theme(legend.position = "none")
+
+plot6
+
+png(filename = "../outputs/plots/pca_primary_mets.png", height = 800, width = 1200, res = 120)
+ggarrange(plot1, plot2, plot3, plot4, plot5, plot6,
+          ncol = 3,
+          nrow = 2)
+dev.off()
+
+#clean up
+rm(list = c("plot1", "plot2", "plot3", "plot4", "plot5", "plot6"))
+
+```
+
+
 # Survival 
 
 ## Disease stage
