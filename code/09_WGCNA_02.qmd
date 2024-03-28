@@ -319,11 +319,11 @@ dev.off()
 #Function for doing survival analysis on module
 survival_stats_function = function(module){
 annotated_me |>
-  dplyr::select(starts_with("ME"), last_event, survial_censor) |>
+  dplyr::select(starts_with("ME"), last_event, survial_censor, age_at_index, stage) |>
   tidyr::pivot_longer(cols = contains("ME"), names_to = "Module", values_to = "Value") |>
   dplyr::filter(Module == module) |>
   mutate(ME_division = ifelse(Value > median(Value), "high", "low")) |>
-  survival::coxph((Surv(last_event, survial_censor) ~ ME_division), data = _) |> 
+  survival::coxph((Surv(last_event, survial_censor) ~ ME_division + age_at_index + stage), data = _) |> 
   summary()
 }
 
@@ -343,10 +343,14 @@ survival_stats_df = data.frame(matrix(ncol = 5, nrow = 0))
 
 for(module in names(survival_stats)){
   
-  pvalue = unname(survival_stats[[module]]$waldtest[3])
-  HR = survival_stats[[module]]$conf.int[2]
-  lower_interval = 1/survival_stats[[module]]$conf.int[3]
-  upper_interval = 1/survival_stats[[module]]$conf.int[4]
+  #pvalue = unname(survival_stats[[module]]$waldtest[3])
+  pvalue = survival_stats[[module]]$coefficients[1,5]
+  #HR = survival_stats[[module]]$conf.int[2]
+  HR = survival_stats[[module]]$conf.int[1,2]
+  #lower_interval = 1/survival_stats[[module]]$conf.int[3]
+  lower_interval = 1/survival_stats[[module]]$conf.int[1,3]
+  #upper_interval = 1/survival_stats[[module]]$conf.int[4]
+  upper_interval = 1/survival_stats[[module]]$conf.int[1,4]
   
   temp = c(module, pvalue, HR, lower_interval, upper_interval)
   
@@ -367,13 +371,14 @@ rm(list = c("module", "HR", "lower_interval", "pvalue", "temp", "upper_interval"
 ##Forest Plot
 ```{r}
 
-png(filename = "../outputs/plots/wgcna_forest_plot.png", height = 600, width = 900, res = 120)
-ggplot(survival_stats_df, aes(x = HR, y = module, xmin = lower_interval, xmax = upper_interval)) +
+png(filename = "../outputs/plots/wgcna_forest_plot.png", height = 800, width = 800, res = 120)
+ggplot(survival_stats_df, aes(x = log2(HR), y = module, xmin = log2(lower_interval), xmax = log2(upper_interval))) +
   geom_point(size = 3) +
-  geom_errorbarh(height=.1) +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  xlab("Unadjusted Hazard Ratio") + 
-  ylab("")
+  geom_errorbarh(height=.4) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  xlab("Hazard Ratio") + 
+  ylab("") +
+  labs(x = "log2 of Hazard Ratio", y = "", title = "Overall Survival", subtitle = "Adjusted for age and disease stage")
 dev.off()
 
 ```
