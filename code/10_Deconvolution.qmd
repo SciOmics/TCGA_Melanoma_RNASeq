@@ -266,7 +266,7 @@ sample_metadata = merge(sample_metadata, deconvolution_epic, by = "row.names")
 ## Plot cell types by tissue 
 ```{r}
 
-cell_types = colnames(sample_metadata[,40:47])
+cell_types = c("Bcell", "CAF", "CD4", "CD8", "Endothelial", "Macrophage", "NK", "Other_Cells")
 
 #function
 tissue_rollup_plot = function(cell_type) {
@@ -364,7 +364,7 @@ rm(decon_plot)
 ```
 
 
-####Save
+#### Save
 ```{r}
 
 p1 = decon_plot("Bcell")
@@ -392,18 +392,31 @@ rm(list = c("p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"))
 ### Statistics
 ```{r}
 
-#Survival
+# #Treat data as continuous
+# survival_stats_function = function(cell_type){
+#   
+#   forumula = as.formula(paste0("Surv(last_event, survial_censor) ~ age_at_index + stage + ", paste(cell_type)))
+#   
+#   sample_metadata |> 
+#     coxph(forumula, data = _) |> 
+#     summary()
+#   
+# }
+
+#Divide at median
 survival_stats_function = function(cell_type){
 sample_metadata |>
-  dplyr::select(cell_types, last_event, survial_censor) |>
-  tidyr::pivot_longer(cols = cell_types, names_to = "Cell_Type", values_to = "Value") |>
-  dplyr::filter(Cell_Type == cell_type) |>
-  mutate(cell_type_division = ifelse(Value > median(Value), "high", "low")) |>
-  survival::coxph((Surv(last_event, survial_censor) ~ cell_type_division), data = _) |> 
+  dplyr::select(cell_types, last_event, survial_censor, age_at_index, stage) |>
+  tidyr::pivot_longer(cols = cell_types, names_to = "Cell_Types", values_to = "Value") |>
+  dplyr::filter(Cell_Types == cell_type) |>
+  mutate(median_division = ifelse(Value > median(Value), "high", "low")) |>
+  survival::coxph((Surv(last_event, survial_censor) ~ median_division + age_at_index + stage), data = _) |> 
   summary()
 }
 
+#apply to all cell types
 survival_stats = lapply(cell_types, survival_stats_function)
+#name lists
 names(survival_stats) = cell_types
 
 #clean up
@@ -419,10 +432,10 @@ survival_stats_df = data.frame(matrix(ncol = 5, nrow = 0))
 
 for(cell_type in cell_types){
   
-  pvalue = unname(survival_stats[[cell_type]]$waldtest[3])
-  HR = 1/survival_stats[[cell_type]]$conf.int[1]
-  lower_interval = 1/survival_stats[[cell_type]]$conf.int[3]
-  upper_interval = 1/survival_stats[[cell_type]]$conf.int[4]
+  pvalue = survival_stats[[cell_type]]$coefficients[1,5]
+  HR = survival_stats[[cell_type]]$conf.int[1,1]
+  lower_interval = survival_stats[[cell_type]]$conf.int[1,3]
+  upper_interval = survival_stats[[cell_type]]$conf.int[1,4]
   
   temp = c(cell_type, pvalue, HR, lower_interval, upper_interval)
   
@@ -452,8 +465,8 @@ sample_metadata |>
   mutate(grouping = ifelse(.data[[cell_type]] > median(.data[[cell_type]]), "High", "Low")) |> 
   ggsurvfit::survfit2(survival::Surv(last_event, survial_censor) ~ grouping, data = _) |>
   ggsurvfit::ggsurvfit() +
-    ggsurvfit::add_risktable(risktable_stats = "n.risk") +
-    ggsurvfit::add_pvalue() +
+    #ggsurvfit::add_risktable(risktable_stats = "n.risk") +
+    #ggsurvfit::add_pvalue() +
     ggtitle(cell_type) +
     xlab("Days")
 }
@@ -462,7 +475,7 @@ sample_metadata |>
 lapply(cell_types, survival_plot)
 
 #clean up
-rm(survival_plot)
+#rm(survival_plot)
 
 ```
 
@@ -494,12 +507,12 @@ rm(list = c("p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"))
 ```{r}
 
 png(filename = "../outputs/plots/deconvolution_forest_plot.png", height = 400, width = 500, res = 120)
-ggplot(survival_stats_df, aes(x = HR, y = cell_type, xmin = lower_interval, xmax = upper_interval)) +
-  geom_point(size = 3) +
-  geom_errorbarh(height=.1) +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  xlab("Unadjusted Hazard Ratio") + 
-  ylab("")
+survival_stats_df |> 
+    ggplot(aes(x = log2(1/HR), y = cell_type, xmin = log2(1/lower_interval), xmax = log2(1/upper_interval))) +
+    geom_point(size = 3) +
+    geom_errorbarh(height=.3) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    labs(x = "log2(Hazard Ratio)", y = "")
 dev.off()
   
 ```
