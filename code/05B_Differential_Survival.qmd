@@ -7,6 +7,8 @@ format: html
 
 library(dplyr)
 library(ggplot2)
+library(samr)
+library(wesanderson)
 
 ```
 
@@ -175,6 +177,43 @@ cox_regression = function(gene){
 }
 
 
+
+
+```
+
+
+
+```{r}
+
+
+tcga_data = readRDS("../data/tcga_skcm_data.RDS")
+#counts
+counts = tcga_data@assays@data$unstranded
+#add sample names (columns)
+colnames(counts) = tcga_data@colData@rownames
+#add gene ids (rows)
+rownames(counts) = SummarizedExperiment::rowData(tcga_data)@rownames
+#transpose
+counts = t(counts)
+
+
+sample_data = sample_metadata |> 
+  dplyr::select(barcode, last_event, survial_censor) |> 
+  merge(counts, by.x = "barcode", by.y = "row.names") |> 
+  #dplyr::select(!barcode) |> 
+  na.omit() |> 
+  dplyr::filter(last_event > 0)
+
+#is.na(sample_data)
+
+expression_data = t(sample_data[,4:ncol(sample_data)])
+colnames(expression_data) = sample_data$barcode
+
+
+samseq_results = SAMseq(x = expression_data, 
+                        y = sample_data$last_event,
+                        censoring.status = sample_data$survial_censor,
+                        resp.type = "Survival")
 
 
 ```
